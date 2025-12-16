@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  mongodb:
+    image: bitnami/mongodb:latest
+    ports:
+      - 27017:27017
+    volumes:
+      - "./databases:/docker-entrypoint-initdb.d"
+    environment:
+      MONGODB_ROOT_PASSWORD: CHANGEME
+      MONGODB_PASSWORD: CHANGEME
+      MONGODB_USERNAME: ratings
+      MONGODB_DATABASE: ratings
+  ratings:
+    build: .
+    image: registry.demo.opsta.co.th/ratings:dev
+    ports:
+      - 80:8080
+    environment:
+      SERVICE_VERSION: v2
+      MONGO_DB_URL: mongodb://mongodb:27017
+      MONGO_DB_NAME: ratings
+      MONGO_DB_USERNAME: ratings
+      MONGO_DB_PASSWORD: CHANGEME
+    links:
+      - mongodb:mongodb
