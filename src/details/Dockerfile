@@ -2,7 +2,7 @@ FROM ruby:2.7-alpine
 
 WORKDIR /app
 
-COPY Gemfile Gemfile.lock ./
+COPY Gemfile ./
 
 RUN bundle install
 
