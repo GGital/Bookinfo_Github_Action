@@ -13,8 +13,8 @@ spec:
   - host: bookinfo-gital-dev.opsta.in.th
     http:
       paths:
-      - path: /ratings
-        pathType: Prefix
+      - path: /ratings/*
+        pathType: ImplementationSpecific
         backend:
           service:
             name: bookinfo-dev-ratings
