@@ -1,14 +1,27 @@
 # MULTISTAGE Build
+
 FROM gradle:8.1.1-jdk17-alpine AS builder
+
 WORKDIR /opt/java/
-COPY . .
-RUN gradle clean build
+
+# Copy build files first to cache dependencies
+COPY build.gradle ./
+
+# Download dependencies (this layer will be cached if build.gradle doesn't change)
+RUN gradle dependencies --no-daemon
+
+# Copy source code
+COPY src/ src/
+
+# Build the application
+RUN gradle clean build --no-daemon -x test
 
 # MULTISTAGE Run
 FROM websphere-liberty:23.0.0.4-kernel-java17-openj9
 
 # Copy .jar file from build stage
 COPY --from=builder /opt/java/build/libs/java.war /opt/ibm/wlp/usr/servers/defaultServer/apps/reviews.war
+
 # Copy server configuration
 COPY config/server.xml /opt/ibm/wlp/usr/servers/defaultServer/
 
@@ -17,3 +30,7 @@ RUN /opt/ibm/wlp/bin/installUtility install  --acceptLicense /opt/ibm/wlp/usr/se
 EXPOSE 9080
 
 CMD ["/opt/ibm/wlp/bin/server", "run", "defaultServer"]
+
+
+
+
