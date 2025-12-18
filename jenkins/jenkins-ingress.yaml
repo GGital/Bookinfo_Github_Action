@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: jenkins-ingress
+  namespace: jenkins
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: jenkins-ip
+    ingress.gcp.kubernetes.io/pre-shared-cert: "jenkins-cert" # Your existing cert
+    kubernetes.io/ingress.allow-http: "false"
+spec:
+  rules:
+  - host: "cicd-gital.opsta.in.th"
+    http:
+      paths:
+      - path: /*
+        pathType: ImplementationSpecific
+        backend:
+          service:
+            name: jenkins
+            port:
+              number: 8080

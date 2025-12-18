@@ -1,4 +1,5 @@
 DNS.txt
 cert.pem
+key.pem
 .gitignore
 bookinfo_secret

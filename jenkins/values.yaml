@@ -1,0 +1,46 @@
+controller:
+  # 1. Autopilot-compatible Networking
+  serviceType: NodePort
+  healthCheckPath: "/login"
+  
+  # 2. External URL Setup
+  jenkinsUrl: "https://jenkins.yourdomain.com/"
+  jenkinsUrlProtocol: "https"
+
+  # 3. Security Context (Autopilot Friendly)
+  # We remove 'privileged: true' and 'runAsUser: 0'
+  runAsUser: 1000
+  fsGroup: 1000
+  runAsNonRoot: true
+  
+  # Ensure the init container does NOT ask for privileges
+  initContainer:
+    securityContext:
+      privileged: false
+      allowPrivilegeEscalation: false
+      readOnlyRootFilesystem: false
+      runAsUser: 1000
+  
+  # 4. Fix for config-reload-init (The error you saw)
+  sidecars:
+    configAutoReload:
+      enabled: true
+      containerSecurityContext:
+        privileged: false
+        allowPrivilegeEscalation: false
+        runAsUser: 1000
+
+  # 5. Resources (Autopilot requires specific ratios)
+  resources:
+    requests:
+      cpu: "500m"
+      memory: "1024Mi"
+    limits:
+      cpu: "500m"
+      memory: "1024Mi"
+  
+  admin : 
+    createSecret: true
+
+persistence:
+  enabled: true
