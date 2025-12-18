@@ -1,0 +1,23 @@
+ratings:
+  namespace: bookinfo-uat
+  image: registry-gital.opsta.in.th/bookinfo/ratings
+  tag: uat
+  replicas: 1
+  imagePullSecrets: registry-bookinfo
+  port: 8080
+  healthCheckPath: "/health"
+  mongodbPasswordExistingSecret: bookinfo-uat-ratings-mongo-secret
+ingress:
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "bookinfo-ip"
+    ingress.gcp.kubernetes.io/pre-shared-cert: "bookinfo-gital-dev-cert"
+    kubernetes.io/ingress.allow-http: false
+  host: bookinfo-gital-uat.opsta.in.th
+  path: /ratings/*
+  serviceType: NodePort
+extraEnv:
+  SERVICE_VERSION: v2
+  MONGO_DB_URL: mongodb://bookinfo-uat-ratings-mongodb:27017
+  MONGO_DB_USERNAME: root
+  MONGO_DB_NAME: bookinfo-uat-ratings
