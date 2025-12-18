@@ -3,11 +3,13 @@ kind: Ingress
 metadata:
   name: {{ .Release.Name }}
   namespace: {{ .Values.ratings.namespace }}
+  {{- if .Values.ingress.annotations }}
   annotations:
-    kubernetes.io/ingress.class: {{ .Values.ingress.annotations.class}}
-    kubernetes.io/ingress.global-static-ip-name: {{ .Values.ingress.annotations.ip}}
-    ingress.gcp.kubernetes.io/pre-shared-cert: {{ .Values.ingress.annotations.cert}}
-    kubernetes.io/ingress.allow-http: "false"
+    {{- range $key, $value := .Values.ingress.annotations }}
+    {{ $key }}: {{ $value | quote}}
+    {{- end }}
+  {{- end }}
+  
 spec:
   rules:
     - host: {{ .Values.ingress.host }}
