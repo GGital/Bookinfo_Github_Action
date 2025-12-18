@@ -1,51 +1,51 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: bookinfo-dev-ratings
-  namespace: bookinfo-dev
+  name: {{ .Release.Name }}
+  namespace: {{ .Values.ratings.namespace }}
   labels:
-    app: bookinfo-dev-ratings
+    app: {{ .Release.Name }}
 spec:
-  replicas: 1
+  replicas: {{ .Values.ratings.replicas }}
   selector:
     matchLabels:
-      app: bookinfo-dev-ratings
+      app: {{ .Release.Name }}
   template:
     metadata:
       labels:
-        app: bookinfo-dev-ratings
+        app: {{ .Release.Name }}
     spec:
       containers:
-        - name: bookinfo-dev-ratings
-          image: registry-gital.opsta.in.th/bookinfo/ratings:dev
+        - name: {{ .Release.Name }}
+          image: {{ .Values.ratings.image }}:{{ .Values.ratings.tag }}
           imagePullPolicy: Always
           ports:
-            - containerPort: 8080
+            - containerPort: {{ .Values.ratings.port}}
               name: web-port
               protocol: TCP
           livenessProbe:
             httpGet:
-              path: /health
-              port: 8080
+              path: {{ .Values.ratings.healthCheckPath}}
+              port: {{ .Values.ratings.port}}
               scheme: HTTP
           readinessProbe:
             httpGet:
-              path: /health
-              port: 8080
+              path: {{ .Values.ratings.healthCheckPath}}
+              port: {{ .Values.ratings.port}}
               scheme: HTTP
+          {{- if .Values.extraEnv }}
           env:
-            - name: SERVICE_VERSION
-              value: v2
-            - name: MONGO_DB_URL
-              value: mongodb://bookinfo-dev-ratings-mongodb:27017
-            - name: MONGO_DB_NAME
-              value: bookinfo-dev-ratings
-            - name: MONGO_DB_USERNAME
-              value: root
+            {{- range $key, $value := .Values.extraEnv }}
+            - name: {{ $key }}
+              value: {{ $value | quote }}
+            {{- end }}
+            {{- if .Values.ratings.mongodbPasswordExistingSecret }}
             - name: MONGO_DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: bookinfo-dev-ratings-mongo-secret
+                  name: {{ .Values.ratings.mongodbPasswordExistingSecret }}
                   key: mongodb-passwords
+            {{- end }}
+          {{- end }}
       imagePullSecrets:
-        - name: registry-bookinfo
+        - name: {{ .Values.ratings.imagePullSecrets }}
