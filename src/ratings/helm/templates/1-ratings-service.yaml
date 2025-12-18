@@ -1,14 +1,14 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: { { .Release.Name } }
-  namespace: { { .Values.ratings.namespace } }
+  name: {{ .Release.Name }}
+  namespace: {{ .Values.ratings.namespace }}
   annotations:
     cloud.google.com/neg: '{"ingress": true}'
 spec:
-  type: { { .Values.ingress.serviceType } }
+  type: {{ .Values.ingress.serviceType }}
   selector:
-    app: { { .Release.Name } }
+    app: {{ .Release.Name }}
   ports:
-    - port: { { .Values.ratings.port } }
-      targetPort: { { .Values.ratings.port } }
+    - port: {{ .Values.ratings.port }}
+      targetPort: {{ .Values.ratings.port }}
