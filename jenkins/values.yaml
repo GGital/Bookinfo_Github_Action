@@ -4,7 +4,7 @@ controller:
   healthCheckPath: "/login"
   
   # 2. External URL Setup
-  jenkinsUrl: "https://jenkins.yourdomain.com/"
+  jenkinsUrl: "https://cicd-gital.opsta.in.th/"
   jenkinsUrlProtocol: "https"
 
   # 3. Security Context (Autopilot Friendly)
