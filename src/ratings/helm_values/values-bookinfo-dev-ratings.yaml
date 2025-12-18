@@ -9,9 +9,9 @@ ratings:
   mongodbPasswordExistingSecret: bookinfo-dev-ratings-mongo-secret
 ingress:
   annotations:
-    class: 'gce'
-    ip: 'bookinfo-ip'
-    cert: 'bookinfo-gital-dev-cert'
+    class: "gce"
+    ip: "bookinfo-ip"
+    cert: "bookinfo-gital-dev-cert"
   host: bookinfo-gital-dev.opsta.in.th
   path: /ratings/*
   serviceType: NodePort
@@ -19,4 +19,4 @@ extraEnv:
   SERVICE_VERSION: v2
   MONGO_DB_URL: mongodb://bookinfo-dev-ratings-mongodb:27017
   MONGO_DB_USERNAME: root
-
+  MONGO_DB_NAME: bookinfo-dev-ratings
