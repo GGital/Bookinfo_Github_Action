@@ -1,0 +1,22 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bookinfo-dev-ratings
+  namespace: bookinfo-dev
+  annotations:
+    kubernetes.io/ingress.class: 'gce'
+    kubernetes.io/ingress.global-static-ip-name: 'bookinfo-ip'
+    ingress.gcp.kubernetes.io/pre-shared-cert: 'bookinfo-gital-dev-cert'
+    kubernetes.io/ingress.allow-http: 'false'
+spec:
+  rules:
+    - host: bookinfo-gital-dev.opsta.in.th
+      http:
+        paths:
+          - path: /ratings/*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: bookinfo-dev-ratings
+                port:
+                  number: 8080
