@@ -1,0 +1,18 @@
+details:
+  namespace: bookinfo-dev
+  image: registry-gital.opsta.in.th/bookinfo/details
+  tag: dev
+  replicas: 1
+  imagePullSecrets: registry-bookinfo
+  port: 9080
+  healthCheckPath: "/health"
+ingress:
+  annotations:
+    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.global-static-ip-name: "bookinfo-ip"
+    ingress.gcp.kubernetes.io/pre-shared-cert: "bookinfo-gital-dev-cert"
+    kubernetes.io/ingress.allow-http: false
+  host: bookinfo-gital-dev.opsta.in.th
+  path: /details/*
+  serviceType: NodePort
+extraEnv: {}
