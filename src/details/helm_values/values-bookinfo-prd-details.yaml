@@ -6,13 +6,4 @@ details:
   imagePullSecrets: registry-bookinfo
   port: 9080
   healthCheckPath: "/health"
-ingress:
-  annotations:
-    kubernetes.io/ingress.class: "gce"
-    kubernetes.io/ingress.global-static-ip-name: "bookinfo-ip"
-    ingress.gcp.kubernetes.io/pre-shared-cert: "bookinfo-gital-prd-cert"
-    kubernetes.io/ingress.allow-http: false
-  host: bookinfo-gital-prd.opsta.in.th
-  path: /details/*
-  serviceType: NodePort
 extraEnv: {}

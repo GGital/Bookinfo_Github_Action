@@ -3,10 +3,8 @@ kind: Service
 metadata:
   name: {{ .Release.Name }}
   namespace: {{ .Values.details.namespace }}
-  annotations:
-    cloud.google.com/neg: '{"ingress": true}'
 spec:
-  type: {{ .Values.ingress.serviceType }}
+  type: ClusterIP
   selector:
     app: {{ .Release.Name }}
   ports:
