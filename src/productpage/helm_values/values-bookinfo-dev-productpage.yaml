@@ -19,4 +19,4 @@ extraEnv:
   DETAILS_HOSTNAME: details
   RATINGS_HOSTNAME: ratings
   REVIEWS_HOSTNAME: reviews
-  FLOOD_FACTOR: "0"
+  FLOOD_FACTOR: 0
