@@ -7,15 +7,6 @@ ratings:
   port: 8080
   healthCheckPath: "/health"
   mongodbPasswordExistingSecret: bookinfo-dev-ratings-mongo-secret
-ingress:
-  annotations:
-    kubernetes.io/ingress.class: "gce"
-    kubernetes.io/ingress.global-static-ip-name: "bookinfo-ip"
-    ingress.gcp.kubernetes.io/pre-shared-cert: "bookinfo-gital-dev-cert"
-    kubernetes.io/ingress.allow-http: false
-  host: bookinfo-gital-dev.opsta.in.th
-  path: /ratings/*
-  serviceType: NodePort
 extraEnv:
   SERVICE_VERSION: v2
   MONGO_DB_URL: mongodb://bookinfo-dev-ratings-mongodb:27017
