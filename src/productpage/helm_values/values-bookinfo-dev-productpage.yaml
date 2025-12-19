@@ -18,5 +18,5 @@ ingress:
 extraEnv:
   DETAILS_HOSTNAME: http://bookinfo-details-dev:9080
   RATINGS_HOSTNAME: http://bookinfo-ratings-dev:8080
-  REVIEWS_HOSTNAME: reviews
+  REVIEWS_HOSTNAME: http://bookinfo-reviews-dev:9080
   FLOOD_FACTOR: 0

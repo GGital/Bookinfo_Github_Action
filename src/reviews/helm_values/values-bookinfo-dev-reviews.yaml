@@ -1,0 +1,12 @@
+reviews:
+  namespace: bookinfo-dev
+  image: registry-gital.opsta.in.th/bookinfo/reviews
+  tag: dev
+  replicas: 1
+  imagePullSecrets: registry-bookinfo
+  port: 9080
+  healthCheckPath: "/health"
+extraEnv:
+  ENABLE_RATINGS: "true"
+  RATINGS_SERVICE: "http://bookinfo-ratings-dev:8080"
+  STAR_COLOR: "black"
