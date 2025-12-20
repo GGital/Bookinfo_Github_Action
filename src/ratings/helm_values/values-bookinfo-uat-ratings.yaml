@@ -12,3 +12,4 @@ extraEnv:
   MONGO_DB_URL: mongodb://bookinfo-uat-ratings-mongodb:27017
   MONGO_DB_USERNAME: root
   MONGO_DB_NAME: bookinfo-uat-ratings
+  COMMIT_ID: CHANGEME
