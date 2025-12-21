@@ -1,0 +1,15 @@
+ratings:
+  namespace: bookinfo-dev
+  image: registry-gital.opsta.in.th/bookinfo/ratings
+  tag: dev
+  replicas: 1
+  imagePullSecrets: registry-bookinfo
+  port: 8080
+  healthCheckPath: "/health"
+  mongodbPasswordExistingSecret: bookinfo-dev-ratings-mongo-secret
+extraEnv:
+  SERVICE_VERSION: v2
+  MONGO_DB_URL: mongodb://bookinfo-dev-ratings-mongodb:27017
+  MONGO_DB_USERNAME: root
+  MONGO_DB_NAME: bookinfo-dev-ratings
+  COMMIT_ID: CHANGEME

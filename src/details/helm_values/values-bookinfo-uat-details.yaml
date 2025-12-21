@@ -1,0 +1,9 @@
+details:
+  namespace: bookinfo-uat
+  image: registry-gital.opsta.in.th/bookinfo/details
+  tag: uat
+  replicas: 1
+  imagePullSecrets: registry-bookinfo
+  port: 9080
+  healthCheckPath: "/health"
+extraEnv: {}

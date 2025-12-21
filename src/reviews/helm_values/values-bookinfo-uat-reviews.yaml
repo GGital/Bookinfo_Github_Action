@@ -1,0 +1,12 @@
+reviews:
+  namespace: bookinfo-uat
+  image: registry-gital.opsta.in.th/bookinfo/reviews
+  tag: uat
+  replicas: 1
+  imagePullSecrets: registry-bookinfo
+  port: 9080
+  healthCheckPath: "/health"
+extraEnv:
+  ENABLE_RATINGS: "true"
+  RATINGS_SERVICE: "http://bookinfo-ratings-uat:8080"
+  STAR_COLOR: "black"

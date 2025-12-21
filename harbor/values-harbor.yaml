@@ -1,0 +1,15 @@
+externalURL: https://registry-gital.opsta.in.th
+
+expose:
+  type: ingress
+  ingress:
+    controller: gce
+    hosts:
+      core: registry-gital.opsta.in.th
+    annotations:
+      kubernetes.io/ingress.global-static-ip-name: harbor-ip
+      ingress.gcp.kubernetes.io/pre-shared-cert: harbor-origin-cert
+      kubernetes.io/ingress.allow-http: "false"
+
+persistence:
+  enabled: true

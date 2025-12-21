@@ -1,10 +1,11 @@
-# How to run ratings service
+# Ratings Service
 
-## Prerequisite
+## License
 
-* Node 14
+MIT License
+
+## How to run with docker
 
 ```bash
-npm install
-npm start
+docker-compose up
 ```

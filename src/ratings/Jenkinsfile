@@ -1,0 +1,107 @@
+def scmVars
+
+pipeline { 
+    
+    agent{
+        
+        kubernetes { 
+            
+            yaml"""
+apiVersion: v1
+kind: Pod
+spec: 
+    containers:
+    - name: docker
+      image: docker:20.10.3-dind
+      command:
+      - dockerd
+      - --host=unix:///var/run/docker.sock
+      - --host=tcp://0.0.0.0:2375
+      - --storage-driver=overlay2
+      tty: true
+      securityContext:
+        privileged: true
+    - name: helm
+      image: google/cloud-sdk:alpine
+      command:
+      - cat
+      tty: true
+"""
+
+                
+        }
+    }    
+    
+    // Defining Environment Variables
+    environment {
+        ENV_NAME = "${BRANCH_NAME == "main" ? "uat" : "${BRANCH_NAME}"}"
+    }
+
+    stages{
+        
+        stage('Clone ratings source code') { 
+            steps {
+                container('jnlp') {  // jnlp is basic slave to connect with jenkins master
+                    script {
+                        scmVars = git branch: "${BRANCH_NAME}",
+                                      credentialsId: 'bookinfo-git-deploy-key',
+                                      url: 'git@gitlab.com:ggital-group/bookinfo.git'
+                    } // End script
+                } // End container
+            } // End steps
+        } // End stage
+        stage('Build ratings Docker Image and Push') { 
+            steps { 
+                container('docker') { // docker matches with name in yaml manifest file 
+                    dir('src/ratings') { 
+                        script { 
+                            docker.withRegistry('https://registry-gital.opsta.in.th/' , 'registry-bookinfo') {
+                                docker.build("registry-gital.opsta.in.th/bookinfo/ratings:${ENV_NAME}").push()
+                                } // End with registry
+                            }// End script
+                        } // End dir
+                    }// End container
+                } // End steps
+            } // End stage
+        stage('Deploy ratings with Helm Chart') { 
+    steps {
+        container('helm') {
+            script { 
+                withCredentials([file(credentialsId: 'gke-sa-key-json', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                    dir('src/ratings') { 
+                        sh """
+    # 1. Install dependencies for the Helm installer and the GKE Auth Plugin
+    # Added openssl for checksum verification and bash to run the installer
+    apk add --no-cache curl openssl bash
+
+    # 2. Install Helm
+    # Using -s -- -v to pass flags if needed, or simply piping to bash
+    curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | VERIFY_CHECKSUM=false bash
+
+    # 3. Install the GKE Auth Plugin
+    gcloud components install gke-gcloud-auth-plugin --quiet
+
+    # 4. CRITICAL: Tell kubectl/helm to use the new GKE plugin
+    export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+
+    # 5. Authenticate and Get Credentials
+    gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+    
+    # Replace with your actual cluster details
+    gcloud container clusters get-credentials bookinfo --region asia-southeast1 --project gifted-airport-481410-e7
+    
+    # 6. Run Helm
+    helm upgrade --install \
+    -f ./helm_values/values-bookinfo-${ENV_NAME}-ratings.yaml \
+    --set extraEnv.COMMIT_ID=${scmVars.GIT_COMMIT} \ 
+    --wait --namespace bookinfo-${ENV_NAME} \
+    bookinfo-ratings-${ENV_NAME} ./helm
+"""
+                    }
+                }
+            }
+        }
+    }
+}
+        } // End stage
+    }

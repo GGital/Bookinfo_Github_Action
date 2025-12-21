@@ -1,0 +1,19 @@
+image:
+  tag: latest
+auth:
+  existingSecret: bookinfo-prd-ratings-mongo-secret
+  username: ratings-prd
+  database: ratings-prd
+persistence:
+  enabled: false
+initdbScriptsConfigMap: bookinfo-prd-ratings-mongodb-initdb
+extraEnvVars: # For declaring additional environment variable in pods
+  - name: MONGODB_USERNAME
+    value: "root"
+  - name: MONGODB_DATABASE
+    value: "bookinfo-prd-ratings"
+  - name: MONGODB_PASSWORD
+    valueFrom:
+      secretKeyRef:
+        name: bookinfo-prd-ratings-mongo-secret
+        key: mongodb-passwords
