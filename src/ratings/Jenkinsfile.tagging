@@ -35,9 +35,9 @@ spec:
                 steps { 
                     container('jnlp') { 
                         script { 
-                            git branch: "main"
-                                credentialsId: 'bookinfo-git-deploy-key'
-                                url: 'git@gitlab.com:ggital-group/bookinfo.git'
+                            git branch: "main",
+                                credentialsId: "bookinfo-git-deploy-key",
+                                url: "git@gitlab.com:ggital-group/bookinfo.git"
                             }
                         }
                     }
