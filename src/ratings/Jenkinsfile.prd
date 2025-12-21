@@ -39,7 +39,7 @@ pipeline {
                     userRemoteConfigs: [[
                         credentialsId: 'bookinfo-git-deploy-key',
                         url: 'git@gitlab.com:ggital-group/bookinfo.git'
-                    ])
+                    ]])
                 }
             }
 
