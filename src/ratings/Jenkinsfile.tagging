@@ -36,17 +36,23 @@ spec:
     }
 
     stages { 
-        stage('Clone ratings source code') { 
+        stages { 
+            stage('Clone ratings source code') { 
                 steps { 
+                    // Use the git container you defined or jnlp
                     container('jnlp') { 
                         script { 
-                            git branch: "main",
-                                credentialsId: "bookinfo-git-deploy-key",
-                                url: "git@gitlab.com:ggital-group/bookinfo.git"
-                            }
+                            checkout([$class: 'GitSCM', 
+                                branches: [[name: 'main']], 
+                                userRemoteConfigs: [[
+                                    credentialsId: 'bookinfo-git-deploy-key', 
+                                    url: 'git@gitlab.com:ggital-group/bookinfo.git'
+                                ]]
+                            ])
                         }
                     }
                 }
+            }
             stage("Tag Docker image") {
                 steps {
                     container("docker") {
