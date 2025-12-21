@@ -30,6 +30,11 @@ spec:
         }
     }
 
+    options {
+        // This prevents the "Empty String" Git error by stopping the automatic clone
+        skipDefaultCheckout()
+    }
+
     stages { 
         stage('Clone ratings source code') { 
                 steps { 
