@@ -1,0 +1,20 @@
+def scmVars
+
+pipeline {
+    agent{
+        kubernetes { 
+            yaml """
+            apiVersion: v1
+            kind: Pod
+            spec:
+              containers:
+              - name: helm
+                image: google/cloud-sdk:alpine
+                command:
+                - cat
+                tty: true
+            """
+        }
+    }
+
+}
