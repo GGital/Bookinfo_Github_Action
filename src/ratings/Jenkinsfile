@@ -26,6 +26,11 @@ spec:
       command:
       - cat
       tty: true
+    - name: kics
+      image: checkmarx/kics:latest
+      command:
+      - cat
+      tty: true
     - name: java-node
       image: timbru31/java-node:11-alpine-jre-20
       command:
@@ -66,7 +71,27 @@ spec:
                 } // End container
             } // End steps
         } // End stage
-
+        stage('KICS') { 
+            steps{
+                container('kics') { 
+                    script { 
+                        dir("./src/ratings") { 
+                            sh 'mkdir -p kics-results'
+                            sh 'kics scan -p . --report-formats html --output-path kics-results/ --output-name scan-report'
+                        }
+                    }
+                }
+            }
+            post {
+                always {
+                    // 3. Archive the HTML file so it appears in the Jenkins UI
+                    archiveArtifacts artifacts: 'kics-results/*.html', fingerprint: true
+                    
+                    // Optional: If you have the HTML Publisher Plugin installed:
+                    // publishHTML([reportDir: 'kics-results', reportFiles: 'scan-report.html', reportName: 'KICS Report'])
+                }
+            }
+        }
         stage('Sonarqube') { 
             steps { 
                 container('java-node') { 
@@ -144,8 +169,25 @@ spec:
                     docker run --rm \
                         -v /var/run/docker.sock:/var/run/docker.sock \
                         -v $HOME/Library/Caches:/root/.cache/ \
-                        aquasec/trivy:latest image --severity LOW,MEDIUM,HIGH --format table registry-gital.opsta.in.th/bookinfo/ratings:${ENV_NAME}
+                        aquasec/trivy:latest image --severity LOW,MEDIUM,HIGH \
+                        --format template \
+                        --template "@/usr/local/share/trivy/templates/html.tpl" \
+                        --output trivy-report.html \
+                        registry-gital.opsta.in.th/bookinfo/ratings:${ENV_NAME}
                     """
+
+                    // 1. Save as a downloadable artifact
+                    archiveArtifacts artifacts: 'trivy-report.html'
+                    
+                    // 2. Publish as a viewable tab in Jenkins
+                    publishHTML(target: [
+                        allowMissing: false,
+                        alwaysLinkToLastBuild: false,
+                        keepAll: true,
+                        reportDir: '.',
+                        reportFiles: 'trivy-report.html',
+                        reportName: 'Trivy Security Report'
+                    ])
                 }
             }
         }
