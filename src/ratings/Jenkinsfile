@@ -64,7 +64,7 @@ spec:
                 container('java-node') { 
                     script {
                         dir("./src/ratings") { 
-                            withSonarQubeEnv('sonarqube-opsta') { 
+                            withSonarQubeEnv('sonarqube-global') { 
                                 // Run Sonar Scanner
                                 sh """${SCANNER_HOME}/bin/sonar-scanner \
                                 -D sonar.projectKey=${PROJECT_KEY} \
