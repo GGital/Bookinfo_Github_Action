@@ -26,6 +26,11 @@ spec:
       command:
       - cat
       tty: true
+    - name: java-node
+      image: timbru31/java-node:11-alpine-jre-14
+      command:
+      - cat
+      tty: true
 """
 
                 
@@ -35,6 +40,9 @@ spec:
     // Defining Environment Variables
     environment {
         ENV_NAME = "${BRANCH_NAME == "main" ? "uat" : "${BRANCH_NAME}"}"
+        SCANNER_HOME = tool 'sonarqube-scanner'
+        PROJECT_KEY = "bookinfo:ratings"
+        PROJECT_NAME = "bookinfo:ratings"
     }
 
     stages{
@@ -50,6 +58,34 @@ spec:
                 } // End container
             } // End steps
         } // End stage
+
+        stage('Sonarqube') { 
+            steps { 
+                container('java-node') { 
+                    script {
+                        dir("./src/ratings") { 
+                            withSonarQubeEnv('sonarqube-opsta') { 
+                                // Run Sonar Scanner
+                                sh """${SCANNER_HOME}/bin/sonar-scanner \
+                                -D sonar.projectKey=${PROJECT_KEY} \
+                                -D sonar.projectName=${PROJECT_NAME} \
+                                -D sonar.projectVersion=${BRANCH_NAME}-${BUILD_NUMBER} \
+                                -D sonar.sources=./src
+                                """
+                            }
+
+                            timeout(time: 1,unit: 'MINUTES') { 
+                                def qg = waitForQualityGate()
+                                if (qg.status != 'OK') { 
+                                    error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+
         stage('Build ratings Docker Image and Push') { 
             steps { 
                 container('docker') { // docker matches with name in yaml manifest file 
