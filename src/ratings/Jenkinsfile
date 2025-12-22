@@ -72,18 +72,26 @@ spec:
             } // End steps
         } // End stage
         stage('KICS') { 
-            steps{
+            steps {
                 container('kics') { 
                     script { 
-                        dir("./src/ratings") { 
+                        // Move into the ratings directory
+                        dir("src/ratings") { 
                             sh 'mkdir -p kics-results'
 
+                            // Run scan. Note: Output path is relative to the current dir (src/ratings)
                             sh 'kics scan -p . --report-formats html --output-path kics-results/ --output-name scan-report'
                             
-                            archiveArtifacts artifacts: 'kics-results/*.html', fingerprint: true
-                    
-                            // Optional: If you have the HTML Publisher Plugin installed:
-                            publishHTML([reportDir: 'kics-results', reportFiles: 'scan-report.html', reportName: 'KICS Report'])
+                            // ARCHIVE FIX: Use the path relative to the current dir() block
+                            archiveArtifacts artifacts: 'kics-results/scan-report.html', fingerprint: true
+                            
+                            publishHTML([
+                                allowMissing: false,
+                                alwaysLinkToLastBuild: true,
+                                reportDir: 'kics-results',
+                                reportFiles: 'scan-report.html',
+                                reportName: 'KICS Security Report'
+                            ])
                         }
                     }
                 }
