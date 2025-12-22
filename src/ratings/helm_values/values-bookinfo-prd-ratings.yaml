@@ -9,7 +9,7 @@ ratings:
   mongodbPasswordExistingSecret: bookinfo-prd-ratings-mongo-secret
 extraEnv:
   SERVICE_VERSION: v2
-  MONGO_DB_URL: mongodb://bookinfo-prd-ratings-mongodb:27017/?authSource=ratings
+  MONGO_DB_URL: mongodb://bookinfo-prd-ratings-mongodb:27017
   MONGO_DB_USERNAME: root
   MONGO_DB_NAME: bookinfo-prd-ratings
   COMMIT_ID: CHANGEME
