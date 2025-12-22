@@ -67,6 +67,7 @@ spec:
                             withSonarQubeEnv('sonarqube-global') { 
                                 // Run Sonar Scanner
                                 sh """${SCANNER_HOME}/bin/sonar-scanner \
+                                -D sonar.nodejs.executable=/usr/local/bin/node \
                                 -D sonar.projectKey=${PROJECT_KEY} \
                                 -D sonar.projectName=${PROJECT_NAME} \
                                 -D sonar.projectVersion=${BRANCH_NAME}-${BUILD_NUMBER} \
