@@ -4,3 +4,4 @@ key.pem
 .gitignore
 bookinfo_secret
 gke-kubeconfig.yaml
+reports
