@@ -12,7 +12,7 @@
 
     "httpdispatcher": "1.0.0",
 
-    "mongodb": "^3.6.4",
+    "mongodb": "^6.3.0",
 
     "mysql": "^2.15.0"
 
