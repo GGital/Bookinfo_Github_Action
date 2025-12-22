@@ -143,7 +143,7 @@ spec:
                 docker run --rm \
                     -v /var/run/docker.sock:/var/run/docker.sock \
                     -v $HOME/Library/Caches:/root/.cache/ \
-                    aquasec/trivy:latest image --exit-code 1 --severity CRITICAL my-app:${BUILD_NUMBER}
+                    aquasec/trivy:latest image --exit-code 1 --severity CRITICAL registry-gital.opsta.in.th/bookinfo/ratings:${ENV_NAME}
                 """
             }
         }
