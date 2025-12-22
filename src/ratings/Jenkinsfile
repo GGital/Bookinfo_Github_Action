@@ -80,7 +80,7 @@ spec:
                             sh 'mkdir -p kics-results'
 
                             // Run scan. Note: Output path is relative to the current dir (src/ratings)
-                            sh 'kics scan -p . --report-formats html --output-path kics-results/ --output-name scan-report --no-fail'
+                            sh 'kics scan -p . --report-formats html --output-path kics-results/ --output-name scan-report'
                             
                             // ARCHIVE FIX: Use the path relative to the current dir() block
                             archiveArtifacts artifacts: 'kics-results/scan-report.html', fingerprint: true, allowEmptyArchive: true
