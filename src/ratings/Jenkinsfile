@@ -137,6 +137,16 @@ spec:
                     }// End container
                 } // End steps
             } // End stage
+        stage('Trivy') { 
+            steps{
+                sh """
+                docker run --rm \
+                    -v /var/run/docker.sock:/var/run/docker.sock \
+                    -v $HOME/Library/Caches:/root/.cache/ \
+                    aquasec/trivy:latest image --exit-code 1 --severity CRITICAL my-app:${BUILD_NUMBER}
+                """
+            }
+        }
         stage('Deploy ratings with Helm Chart') { 
     steps {
         container('helm') {
