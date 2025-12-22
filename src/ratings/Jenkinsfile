@@ -101,7 +101,7 @@ spec:
                         dir("./src/ratings") { 
 
                             //Install application dependency
-                            sh """cd src/ && npm install --package-lock && cd../"""
+                            sh """cd src/ && npm install --package-lock && cd .."""
                             
                             //Run dependency Check
                             dependencyCheck(
