@@ -77,18 +77,15 @@ spec:
                     script { 
                         dir("./src/ratings") { 
                             sh 'mkdir -p kics-results'
+
                             sh 'kics scan -p . --report-formats html --output-path kics-results/ --output-name scan-report'
+                            
+                            archiveArtifacts artifacts: 'kics-results/*.html', fingerprint: true
+                    
+                            // Optional: If you have the HTML Publisher Plugin installed:
+                            publishHTML([reportDir: 'kics-results', reportFiles: 'scan-report.html', reportName: 'KICS Report'])
                         }
                     }
-                }
-            }
-            post {
-                always {
-                    // 3. Archive the HTML file so it appears in the Jenkins UI
-                    archiveArtifacts artifacts: 'kics-results/*.html', fingerprint: true
-                    
-                    // Optional: If you have the HTML Publisher Plugin installed:
-                    // publishHTML([reportDir: 'kics-results', reportFiles: 'scan-report.html', reportName: 'KICS Report'])
                 }
             }
         }
