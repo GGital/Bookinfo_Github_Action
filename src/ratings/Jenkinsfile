@@ -27,7 +27,7 @@ spec:
       - cat
       tty: true
     - name: java-node
-      image: timbru31/java-node:17-alpine-node-20
+      image: timbru31/java-node:11-alpine-jre-20
       command:
       - cat
       tty: true
