@@ -31,6 +31,14 @@ spec:
       command:
       - cat
       tty: true
+      volumeMounts:
+      - mountPath: /home/jenkins/dependency-check-data
+        name: dependency-check-data
+    volumes:
+    - name: dependency-check-data
+      hostPath:
+        path: /tmp/dependency-check-data
+
 """
 
                 
@@ -80,6 +88,36 @@ spec:
                                     error "Pipeline aborted due to quality gate failure: ${qg.status}"
                                 }
                             }
+                        }
+                    }
+                }
+            }
+        }
+
+        stage('OWASP Dependency Check') { 
+            steps { 
+                container('java-node') {
+                    script { 
+                        dir("./src/ratings") { 
+
+                            //Install application dependency
+                            sh """cd src/ && npm install --package-lock && cd../"""
+                            
+                            //Run dependency Check
+                            dependencyCheck(
+                                additionalArguments: "--data /home/jenkins/dependency-check-data --out dependency-check-report.xml",
+                                odcInstallation: "dependency-check"
+                            )
+
+                            //Publish report to Jenkins
+                            dependencyCheckPublisher(
+                                pattern: "dependency-check-report.xml"
+                            )
+
+                            //Remove application dependency
+                            sh '''rm -rf src/node_modules src/package-lock.json'''
+
+
                         }
                     }
                 }
