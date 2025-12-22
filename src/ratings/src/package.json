@@ -1,16 +1,31 @@
 {
+
   "scripts": {
+
     "start": "node ratings.js 8080",
-    "test": "jest --ci --reporters=default --reporters=jest-junit"
+
+    "test": "jest"
+
   },
+
   "dependencies": {
-    "httpdispatcher": "^2.1.2", 
-    "mongodb": "^6.3.0",
-    "mysql2": "^3.9.0"
+
+    "httpdispatcher": "1.0.0",
+
+    "mongodb": "^3.6.4",
+
+    "mysql": "^2.15.0"
+
   },
+
   "devDependencies": {
-    "jest": "^29.7.0",
-    "jest-junit": "^16.0.0"
+
+    "jest": "^29.4.1",
+
+    "jest-junit": "^15.0.0"
+
   },
+
   "private": true
+
 }
