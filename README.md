@@ -1,2 +1,2 @@
 # Bookinfo Application for Workshop
-wagayx2
+wagayx3
