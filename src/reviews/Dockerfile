@@ -1,24 +1,32 @@
 # MULTISTAGE Build
+
 FROM gradle:8.1.1-jdk17-alpine AS builder
 
 WORKDIR /opt/java/
 
-COPY build.gradle gradle.properties* ./
+# Copy build files first to cache dependencies
+COPY build.gradle ./
 
-RUN gradle dependencies --no-daemon 2>&1 | grep -v Warning || true
+# Download dependencies (this layer will be cached if build.gradle doesn't change)
+RUN gradle dependencies --no-daemon
+
+# Copy source code
 COPY src/ src/
 
-COPY config/ config/
-
-RUN gradle clean build --no-daemon -x test && \
-    mkdir -p /opt/java/output && \
-    cp build/libs/*.war /opt/java/output/reviews.war
+# Build the application
+RUN gradle clean build --no-daemon -x test
 
 # MULTISTAGE Run
-FROM jetty:11-jdk17-alpine
+FROM websphere-liberty:23.0.0.4-kernel-java17-openj9
 
-COPY --from=builder /opt/java/output/reviews.war /var/lib/jetty/webapps/reviews.war
+# Copy .jar file from build stage
+COPY --from=builder /opt/java/build/libs/java.war /opt/ibm/wlp/usr/servers/defaultServer/apps/reviews.war
+
+# Copy server configuration
+COPY config/server.xml /opt/ibm/wlp/usr/servers/defaultServer/
+
+RUN /opt/ibm/wlp/bin/installUtility install  --acceptLicense /opt/ibm/wlp/usr/servers/defaultServer/server.xml
 
 EXPOSE 9080
 
-CMD ["java", "-jar", "/usr/local/jetty/start.jar"]
+CMD ["/opt/ibm/wlp/bin/server", "run", "defaultServer"]
