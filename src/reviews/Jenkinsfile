@@ -31,8 +31,8 @@ spec:
       command:
       - cat
       tty: true
-    - name: java-node
-      image: timbru31/java-node:11-alpine-jre-20
+    - name: java-gradle
+      image: gradle:8.0-jdk11
       command:
       - cat
       tty: true
@@ -54,13 +54,13 @@ spec:
     environment {
         ENV_NAME = "${BRANCH_NAME == "main" ? "uat" : "${BRANCH_NAME}"}"
         SCANNER_HOME = tool 'sonarqube-scanner'
-        PROJECT_KEY = "bookinfo:ratings"
-        PROJECT_NAME = "bookinfo:ratings"
+        PROJECT_KEY = "bookinfo:reviews"
+        PROJECT_NAME = "bookinfo:reviews"
     }
 
     stages{
         
-        stage('Clone ratings source code') { 
+        stage('Clone reviews source code') { 
             steps {
                 container('jnlp') {  // jnlp is basic slave to connect with jenkins master
                     script {
@@ -75,11 +75,11 @@ spec:
             steps {
                 container('kics') { 
                     script { 
-                        // Move into the ratings directory
-                        dir("src/ratings") { 
+                        // Move into the reviews directory
+                        dir("src/reviews") { 
                             sh 'mkdir -p kics-results'
 
-                            // Run scan. Note: Output path is relative to the current dir (src/ratings)
+                            // Run scan. Note: Output path is relative to the current dir (src/reviews)
                             sh 'kics scan -p . --report-formats html --output-path kics-results/ --output-name scan-report --ignore-on-exit results'
                             
                             // ARCHIVE FIX: Use the path relative to the current dir() block
@@ -99,16 +99,17 @@ spec:
         }
         stage('Sonarqube') { 
             steps { 
-                container('java-node') { 
+                container('java-gradle') { 
                     script {
-                        dir("./src/ratings") { 
+                        dir("./src/reviews") { 
                             withSonarQubeEnv('sonarqube-global') { 
                                 // Run Sonar Scanner
                                 sh """${SCANNER_HOME}/bin/sonar-scanner \
                                 -D sonar.projectKey=${PROJECT_KEY} \
                                 -D sonar.projectName=${PROJECT_NAME} \
                                 -D sonar.projectVersion=${BRANCH_NAME}-${BUILD_NUMBER} \
-                                -D sonar.sources=./src
+                                -D sonar.sources=src/main \
+                                -D sonar.java.binaries=bin/main/application
                                 """
                             }
 
@@ -126,41 +127,39 @@ spec:
 
         stage('OWASP Dependency Check') { 
             steps { 
-                container('java-node') {
+                container('java-gradle') {
                     script { 
-                        dir("./src/ratings") { 
+                        dir("./src/reviews") { 
 
-                            //Install application dependency
-                            sh """cd src/ && npm install --package-lock && cd .."""
+                            // Build with Gradle
+                            sh 'gradle build -x test'
                             
-                            //Run dependency Check
+                            // Run dependency Check
                             dependencyCheck(
                                 additionalArguments: "--data /home/jenkins/dependency-check-data --out dependency-check-report.xml",
                                 odcInstallation: "dependency-check"
                             )
 
-                            //Publish report to Jenkins
+                            // Publish report to Jenkins
                             dependencyCheckPublisher(
                                 pattern: "dependency-check-report.xml"
                             )
 
-                            //Remove application dependency
-                            sh '''rm -rf src/node_modules src/package-lock.json'''
-
-
+                            // Remove build artifacts
+                            sh 'gradle clean'
                         }
                     }
                 }
             }
         }
 
-        stage('Build ratings Docker Image and Push') { 
+        stage('Build reviews Docker Image and Push') { 
             steps { 
                 container('docker') { // docker matches with name in yaml manifest file 
-                    dir('src/ratings') { 
+                    dir('src/reviews') { 
                         script { 
                             docker.withRegistry('https://registry-gital.opsta.in.th/' , 'registry-bookinfo') {
-                                docker.build("registry-gital.opsta.in.th/bookinfo/ratings:${ENV_NAME}").push()
+                                docker.build("registry-gital.opsta.in.th/bookinfo/reviews:${ENV_NAME}").push()
                                 } // End with registry
                             }// End script
                         } // End dir
@@ -183,7 +182,7 @@ spec:
                         --format template \
                         --template "@/workspace/trivy-html.tpl" \
                         --output /workspace/trivy-report.html \
-                        registry-gital.opsta.in.th/bookinfo/ratings:${ENV_NAME}
+                        registry-gital.opsta.in.th/bookinfo/reviews:${ENV_NAME}
                     """
 
                     archiveArtifacts artifacts: 'trivy-report.html'
@@ -198,12 +197,12 @@ spec:
                 }
             }
         }
-        stage('Deploy ratings with Helm Chart') { 
+        stage('Deploy reviews with Helm Chart') { 
     steps {
         container('helm') {
             script { 
                 withCredentials([file(credentialsId: 'gke-sa-key-json', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                    dir('src/ratings') { 
+                    dir('src/reviews') { 
                         sh """
     # 1. Install dependencies for the Helm installer and the GKE Auth Plugin
     # Added openssl for checksum verification and bash to run the installer
@@ -227,10 +226,10 @@ spec:
     
     # 6. Run Helm
     helm upgrade --install \
-    -f ./helm_values/values-bookinfo-${ENV_NAME}-ratings.yaml \
+    -f ./helm_values/values-bookinfo-${ENV_NAME}-reviews.yaml \
     --set extraEnv.COMMIT_ID=${scmVars.GIT_COMMIT} \
     --wait --namespace bookinfo-${ENV_NAME} \
-    bookinfo-ratings-${ENV_NAME} ./helm
+    bookinfo-reviews-${ENV_NAME} ./helm
 """
                     }
                 }

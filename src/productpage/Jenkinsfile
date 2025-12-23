@@ -13,12 +13,18 @@ spec:
     containers:
     - name: docker
       image: docker:20.10.3-dind
+      resources:
+        requests:
+          cpu: "1"
+          memory: "2Gi"
+        limits:
+          cpu: "2"
+          memory: "4Gi"
       command:
       - dockerd
       - --host=unix:///var/run/docker.sock
       - --host=tcp://0.0.0.0:2375
       - --storage-driver=overlay2
-      tty: true
       securityContext:
         privileged: true
     - name: helm
@@ -33,6 +39,11 @@ spec:
       tty: true
     - name: java-node
       image: timbru31/java-node:11-alpine-jre-20
+      command:
+      - cat
+      tty: true
+    - name: python
+      image: python:3.9-alpine
       command:
       - cat
       tty: true
@@ -54,13 +65,13 @@ spec:
     environment {
         ENV_NAME = "${BRANCH_NAME == "main" ? "uat" : "${BRANCH_NAME}"}"
         SCANNER_HOME = tool 'sonarqube-scanner'
-        PROJECT_KEY = "bookinfo:ratings"
-        PROJECT_NAME = "bookinfo:ratings"
+        PROJECT_KEY = "bookinfo:productpage"
+        PROJECT_NAME = "bookinfo:productpage"
     }
 
     stages{
         
-        stage('Clone ratings source code') { 
+        stage('Clone productpage source code') { 
             steps {
                 container('jnlp') {  // jnlp is basic slave to connect with jenkins master
                     script {
@@ -75,11 +86,11 @@ spec:
             steps {
                 container('kics') { 
                     script { 
-                        // Move into the ratings directory
-                        dir("src/ratings") { 
+                        // Move into the productpage directory
+                        dir("src/productpage") { 
                             sh 'mkdir -p kics-results'
 
-                            // Run scan. Note: Output path is relative to the current dir (src/ratings)
+                            // Run scan. Note: Output path is relative to the current dir (src/productpage)
                             sh 'kics scan -p . --report-formats html --output-path kics-results/ --output-name scan-report --ignore-on-exit results'
                             
                             // ARCHIVE FIX: Use the path relative to the current dir() block
@@ -101,14 +112,14 @@ spec:
             steps { 
                 container('java-node') { 
                     script {
-                        dir("./src/ratings") { 
+                        dir("./src/productpage") { 
                             withSonarQubeEnv('sonarqube-global') { 
                                 // Run Sonar Scanner
                                 sh """${SCANNER_HOME}/bin/sonar-scanner \
                                 -D sonar.projectKey=${PROJECT_KEY} \
                                 -D sonar.projectName=${PROJECT_NAME} \
                                 -D sonar.projectVersion=${BRANCH_NAME}-${BUILD_NUMBER} \
-                                -D sonar.sources=./src
+                                -D sonar.sources=.
                                 """
                             }
 
@@ -126,41 +137,61 @@ spec:
 
         stage('OWASP Dependency Check') { 
             steps { 
-                container('java-node') {
+                container('python') {
                     script { 
-                        dir("./src/ratings") { 
+                        dir("./src/productpage") { 
 
-                            //Install application dependency
-                            sh """cd src/ && npm install --package-lock && cd .."""
+                            // Install Java for dependency-check
+                            sh 'apk add --no-cache openjdk11-jre'
+
+                            // Install application dependencies
+                            sh 'pip install --no-cache-dir --progress-bar off -r requirements.txt'
                             
-                            //Run dependency Check
+                            // Run dependency Check
                             dependencyCheck(
                                 additionalArguments: "--data /home/jenkins/dependency-check-data --out dependency-check-report.xml",
                                 odcInstallation: "dependency-check"
                             )
 
-                            //Publish report to Jenkins
+                            // Publish report to Jenkins
                             dependencyCheckPublisher(
                                 pattern: "dependency-check-report.xml"
                             )
 
-                            //Remove application dependency
-                            sh '''rm -rf src/node_modules src/package-lock.json'''
-
-
+                            // Remove application dependencies
+                            sh 'rm -rf /root/.cache/pip'
                         }
                     }
                 }
             }
         }
 
-        stage('Build ratings Docker Image and Push') { 
+        /*
+        stage('Test') {
+            steps {
+                container('python') {
+                    script {
+                        dir("./src/productpage") {
+                            // Install dependencies
+                            sh 'pip install -r requirements.txt'
+                            sh 'pip install -r test-requirements.txt'
+                            sh 'pip install pytest'
+                            
+                            // Run tests
+                            sh 'DETAILS_HOSTNAME=http://bookinfo-details-${ENV_NAME}:9080 RATINGS_HOSTNAME=http://bookinfo-ratings-${ENV_NAME}:8080 REVIEWS_HOSTNAME=http://bookinfo-reviews-${ENV_NAME}:9080 FLOOD_FACTOR=0 python -m pytest tests/unit/ -v'
+                        }
+                    }
+                }
+            }
+        }*/
+
+        stage('Build productpage Docker Image and Push') { 
             steps { 
                 container('docker') { // docker matches with name in yaml manifest file 
-                    dir('src/ratings') { 
+                    dir('src/productpage') { 
                         script { 
                             docker.withRegistry('https://registry-gital.opsta.in.th/' , 'registry-bookinfo') {
-                                docker.build("registry-gital.opsta.in.th/bookinfo/ratings:${ENV_NAME}").push()
+                                docker.build("registry-gital.opsta.in.th/bookinfo/productpage:${ENV_NAME}").push()
                                 } // End with registry
                             }// End script
                         } // End dir
@@ -183,7 +214,7 @@ spec:
                         --format template \
                         --template "@/workspace/trivy-html.tpl" \
                         --output /workspace/trivy-report.html \
-                        registry-gital.opsta.in.th/bookinfo/ratings:${ENV_NAME}
+                        registry-gital.opsta.in.th/bookinfo/productpage:${ENV_NAME}
                     """
 
                     archiveArtifacts artifacts: 'trivy-report.html'
@@ -198,12 +229,12 @@ spec:
                 }
             }
         }
-        stage('Deploy ratings with Helm Chart') { 
+        stage('Deploy productpage with Helm Chart') { 
     steps {
         container('helm') {
             script { 
                 withCredentials([file(credentialsId: 'gke-sa-key-json', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                    dir('src/ratings') { 
+                    dir('src/productpage') { 
                         sh """
     # 1. Install dependencies for the Helm installer and the GKE Auth Plugin
     # Added openssl for checksum verification and bash to run the installer
@@ -227,10 +258,10 @@ spec:
     
     # 6. Run Helm
     helm upgrade --install \
-    -f ./helm_values/values-bookinfo-${ENV_NAME}-ratings.yaml \
+    -f ./helm_values/values-bookinfo-${ENV_NAME}-productpage.yaml \
     --set extraEnv.COMMIT_ID=${scmVars.GIT_COMMIT} \
     --wait --namespace bookinfo-${ENV_NAME} \
-    bookinfo-ratings-${ENV_NAME} ./helm
+    bookinfo-productpage-${ENV_NAME} ./helm
 """
                     }
                 }

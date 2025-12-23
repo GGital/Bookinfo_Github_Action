@@ -16,7 +16,7 @@ ingress:
   path: /*
   serviceType: NodePort
 extraEnv:
-  DETAILS_HOSTNAME: details
-  RATINGS_HOSTNAME: ratings
-  REVIEWS_HOSTNAME: reviews
+  DETAILS_HOSTNAME: http://bookinfo-details-prd:9080
+  RATINGS_HOSTNAME: http://bookinfo-ratings-prd:8080
+  REVIEWS_HOSTNAME: http://bookinfo-reviews-prd:9080
   FLOOD_FACTOR: 0

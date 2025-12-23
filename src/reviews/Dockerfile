@@ -30,7 +30,3 @@ RUN /opt/ibm/wlp/bin/installUtility install  --acceptLicense /opt/ibm/wlp/usr/se
 EXPOSE 9080
 
 CMD ["/opt/ibm/wlp/bin/server", "run", "defaultServer"]
-
-
-
-

@@ -1,0 +1,33 @@
+monitoringPasscode: "${MONITORING_PASSCODE}"
+
+community:
+  enabled: true
+
+ingress:
+  enabled: true
+  # Change this from 'gce' to 'nginx'
+  ingressClassName: nginx 
+  annotations:
+    # Tell NGINX to handle larger file uploads (standard for SonarQube)
+    nginx.ingress.kubernetes.io/proxy-body-size: "64m"
+    # If you want NGINX to handle the SSL redirect
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+
+  hosts:
+    - name: sast-gital.opsta.in.th
+      path: /
+      pathType: ImplementationSpecific
+
+service:
+  # NGINX works best with ClusterIP for internal routing
+  type: ClusterIP
+  externalPort: 9000
+  internalPort: 9000
+
+# Probes remain the same (crucial for Java startup)
+readinessProbe:
+  initialDelaySeconds: 60
+  periodSeconds: 30
+livenessProbe:
+  initialDelaySeconds: 60
+  periodSeconds: 30
