@@ -171,20 +171,22 @@ spec:
             steps{
                 container('docker') { 
                     sh """
+                    # 1. Download the official HTML template to the current workspace
+                    curl -sSL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -o trivy-html.tpl
+
+                    # 2. Run Trivy and mount the workspace so it can see the downloaded template
                     docker run --rm \
                         -v /var/run/docker.sock:/var/run/docker.sock \
-                        -v $HOME/Library/Caches:/root/.cache/ \
-                        aquasec/trivy:latest image --severity LOW,MEDIUM,HIGH \
+                        -v \$(pwd):/workspace \
+                        aquasec/trivy:latest image \
+                        --severity LOW,MEDIUM,HIGH \
                         --format template \
-                        --template "@html" \
-                        --output trivy-report.html \
+                        --template "@/workspace/trivy-html.tpl" \
+                        --output /workspace/trivy-report.html \
                         registry-gital.opsta.in.th/bookinfo/ratings:${ENV_NAME}
                     """
 
-                    // 1. Save as a downloadable artifact
                     archiveArtifacts artifacts: 'trivy-report.html'
-                    
-                    // 2. Publish as a viewable tab in Jenkins
                     publishHTML(target: [
                         allowMissing: false,
                         alwaysLinkToLastBuild: false,
