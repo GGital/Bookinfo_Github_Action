@@ -171,7 +171,7 @@ spec:
                             sh 'pip install pytest'
                             
                             // Run tests
-                            sh 'python -m unittest discover tests/unit'
+                            sh 'DETAILS_HOSTNAME=http://bookinfo-details-${ENV_NAME}:9080 RATINGS_HOSTNAME=http://bookinfo-ratings-${ENV_NAME}:8080 REVIEWS_HOSTNAME=http://bookinfo-reviews-${ENV_NAME}:9080 FLOOD_FACTOR=0 python -m pytest tests/unit/ -v'
                         }
                     }
                 }
