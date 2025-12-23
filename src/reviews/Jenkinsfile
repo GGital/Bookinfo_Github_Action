@@ -108,7 +108,8 @@ spec:
                                 -D sonar.projectKey=${PROJECT_KEY} \
                                 -D sonar.projectName=${PROJECT_NAME} \
                                 -D sonar.projectVersion=${BRANCH_NAME}-${BUILD_NUMBER} \
-                                -D sonar.sources=src/main
+                                -D sonar.sources=src/main \
+                                -D sonar.java.binaries=build/classes
                                 """
                             }
 

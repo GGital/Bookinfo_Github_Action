@@ -1,36 +1,24 @@
 # MULTISTAGE Build
-
 FROM gradle:8.1.1-jdk17-alpine AS builder
 
 WORKDIR /opt/java/
 
-# Copy build files first to cache dependencies
-COPY build.gradle ./
+COPY build.gradle gradle.properties* ./
 
-# Download dependencies (this layer will be cached if build.gradle doesn't change)
-RUN gradle dependencies --no-daemon
-
-# Copy source code
+RUN gradle dependencies --no-daemon 2>&1 | grep -v Warning || true
 COPY src/ src/
 
-# Build the application
-RUN gradle clean build --no-daemon -x test
+COPY config/ config/
 
-# MULTISTAGE Run
-FROM websphere-liberty:23.0.0.4-kernel-java17-openj9
+RUN gradle clean build --no-daemon -x test && \
+    mkdir -p /opt/java/output && \
+    cp build/libs/*.war /opt/java/output/reviews.war
 
-# Copy .jar file from build stage
-COPY --from=builder /opt/java/build/libs/java.war /opt/ibm/wlp/usr/servers/defaultServer/apps/reviews.war
+# MULTISTAGE Run - Distroless (minimal)
+FROM gcr.io/distroless/java17
 
-# Copy server configuration
-COPY config/server.xml /opt/ibm/wlp/usr/servers/defaultServer/
-
-RUN /opt/ibm/wlp/bin/installUtility install  --acceptLicense /opt/ibm/wlp/usr/servers/defaultServer/server.xml
+COPY --from=builder /opt/java/output/reviews.war /app/reviews.war
 
 EXPOSE 9080
 
-CMD ["/opt/ibm/wlp/bin/server", "run", "defaultServer"]
-
-
-
-
+ENTRYPOINT ["/usr/bin/java", "-jar", "/app/reviews.war"]
