@@ -48,7 +48,7 @@ spec:
 
                 
         }
-    }    
+    }
     
     // Defining Environment Variables
     environment {
@@ -59,8 +59,11 @@ spec:
     }
 
     stages{
-        
+
         stage('Clone reviews source code') { 
+            when {
+                changeset "src/reviews/**"
+            }
             steps {
                 container('jnlp') {  // jnlp is basic slave to connect with jenkins master
                     script {
@@ -72,6 +75,9 @@ spec:
             } // End steps
         } // End stage
         stage('KICS') { 
+            when {
+                changeset "src/reviews/**"
+            }
             steps {
                 container('kics') { 
                     script { 
@@ -98,6 +104,9 @@ spec:
             }
         }
         stage('Sonarqube') { 
+            when {
+                changeset "src/reviews/**"
+            }
             steps { 
                 container('java-gradle') { 
                     script {
@@ -126,6 +135,9 @@ spec:
         }
 
         stage('OWASP Dependency Check') { 
+            when {
+                changeset "src/reviews/**"
+            }
             steps { 
                 container('java-gradle') {
                     script { 
@@ -154,6 +166,9 @@ spec:
         }
 
         stage('Build reviews Docker Image and Push') { 
+            when {
+                changeset "src/reviews/**"
+            }
             steps { 
                 container('docker') { // docker matches with name in yaml manifest file 
                     dir('src/reviews') { 
@@ -167,6 +182,9 @@ spec:
                 } // End steps
             } // End stage
         stage('Trivy') { 
+            when {
+                changeset "src/reviews/**"
+            }
             steps{
                 container('docker') { 
                     sh """
@@ -198,7 +216,10 @@ spec:
             }
         }
         stage('Deploy reviews with Helm Chart') { 
-    steps {
+            when {
+                changeset "src/reviews/**"
+            }
+            steps {
         container('helm') {
             script { 
                 withCredentials([file(credentialsId: 'gke-sa-key-json', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {

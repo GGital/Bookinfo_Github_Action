@@ -66,6 +66,9 @@ spec:
     stages{
         
         stage('Clone details source code') { 
+            when {
+                changeset "src/details/**"
+            }
             steps {
                 container('jnlp') {  // jnlp is basic slave to connect with jenkins master
                     script {
@@ -77,6 +80,9 @@ spec:
             } // End steps
         } // End stage
         stage('KICS') { 
+            when {
+                changeset "src/details/**"
+            }
             steps {
                 container('kics') { 
                     script { 
@@ -103,6 +109,9 @@ spec:
             }
         }
         stage('Sonarqube') { 
+            when {
+                changeset "src/details/**"
+            }
             steps { 
                 container('java-node') { 
                     script {
@@ -130,6 +139,9 @@ spec:
         }
 
         stage('OWASP Dependency Check') { 
+            when {
+                changeset "src/details/**"
+            }
             steps { 
                 container('ruby') {
                     script { 
@@ -161,6 +173,9 @@ spec:
         }
 
         stage('Build details Docker Image and Push') { 
+            when {
+                changeset "src/details/**"
+            }
             steps { 
                 container('docker') { // docker matches with name in yaml manifest file 
                     dir('src/details') { 
@@ -174,6 +189,9 @@ spec:
                 } // End steps
             } // End stage
         stage('Trivy') { 
+            when {
+                changeset "src/details/**"
+            }
             steps{
                 container('docker') { 
                     sh """
@@ -205,7 +223,10 @@ spec:
             }
         }
         stage('Deploy details with Helm Chart') { 
-    steps {
+            when {
+                changeset "src/details/**"
+            }
+            steps {
         container('helm') {
             script { 
                 withCredentials([file(credentialsId: 'gke-sa-key-json', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
