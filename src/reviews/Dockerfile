@@ -14,11 +14,11 @@ RUN gradle clean build --no-daemon -x test && \
     mkdir -p /opt/java/output && \
     cp build/libs/*.war /opt/java/output/reviews.war
 
-# MULTISTAGE Run - Distroless (minimal)
-FROM gcr.io/distroless/java17
+# MULTISTAGE Run
+FROM jetty:11-jdk17-alpine
 
-COPY --from=builder /opt/java/output/reviews.war /app/reviews.war
+COPY --from=builder /opt/java/output/reviews.war /var/lib/jetty/webapps/reviews.war
 
 EXPOSE 9080
 
-ENTRYPOINT ["/usr/bin/java", "-jar", "/app/reviews.war"]
+CMD ["java", "-jar", "/usr/local/jetty/start.jar"]
