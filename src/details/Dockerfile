@@ -2,11 +2,10 @@ FROM ruby:2.7-alpine
 
 WORKDIR /app
 
-RUN mkdir -p /usr/local/bundle && chmod 777 /usr/local/bundle
-
 COPY Gemfile ./
 
-RUN bundle install
+RUN bundle config set --local path 'vendor/bundle' && \
+    bundle install
 
 COPY details.rb ./
 
