@@ -39,11 +39,6 @@ spec:
       volumeMounts:
       - mountPath: /home/jenkins/dependency-check-data
         name: dependency-check-data
-    - name: zap
-      image: zaproxy/zap-stable:2.17.0
-      command:
-      - cat
-      tty: true
     volumes:
     - name: dependency-check-data
       hostPath:
@@ -265,37 +260,37 @@ spec:
     }
 }
     stage('OWASP ZAP DAST') { 
-            when {
-                changeset "src/ratings/**"
-            }
-            steps {
-                container('zap') { 
-                    script {
-                        sh """
-                        # Create report directory
-                        mkdir -p zap-results
+    when {
+        changeset "src/ratings/**"
+    }
+    steps {
+        script {
+            // 1. Create directory for results
+            sh "mkdir -p zap-results"
 
-                        # Run ZAP scan against your application
-                        # Replace with your actual application URL
-                        zaproxy -cmd \
-                            -quickurl http://bookinfo-ratings-${ENV_NAME}:8080 \
-                            -quickout zap-results/zap-report.html
-                        """
+            // 2. Run ZAP scan
+            // -cmd: runs in command line mode
+            // -quickurl: the target to scan
+            // -quickout: where to save the HTML report
+            sh """
+            zaproxy -cmd \
+                -quickurl https://bookinfo-gital-${ENV_NAME}.opsta.in.th/ \
+                -quickout \$(pwd)/zap-results/zap-report.html
+            """
 
-                        // Archive the report
-                        archiveArtifacts artifacts: 'zap-results/zap-report.html', fingerprint: true, allowEmptyArchive: true
-                        
-                        // Publish the report
-                        publishHTML([
-                            allowMissing: false,
-                            alwaysLinkToLastBuild: true,
-                            reportDir: 'zap-results',
-                            reportFiles: 'zap-report.html',
-                            reportName: 'OWASP ZAP DAST Report'
-                        ])
-                    }
-                }
-            }
+            // 3. Archive the report as a build artifact
+            archiveArtifacts artifacts: 'zap-results/zap-report.html', fingerprint: true, allowEmptyArchive: true
+            
+            // 4. Publish the report to the Jenkins UI
+            publishHTML([
+                allowMissing: false,
+                alwaysLinkToLastBuild: true,
+                reportDir: 'zap-results',
+                reportFiles: 'zap-report.html',
+                reportName: 'OWASP ZAP DAST Report'
+            ])
         }
+    }
+}
         } // End stage
     }
