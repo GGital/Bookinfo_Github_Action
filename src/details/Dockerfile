@@ -1,5 +1,9 @@
 FROM ruby:2.7-alpine
 
+ENV GEM_HOME="/app/vendor/bundle"
+ENV PATH="$GEM_HOME/bin:$PATH"
+ENV BUNDLE_SILENCE_ROOT_WARNING=1
+
 RUN apk add --no-cache build-base
 
 WORKDIR /app
