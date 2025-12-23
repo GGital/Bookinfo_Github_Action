@@ -39,6 +39,11 @@ spec:
       volumeMounts:
       - mountPath: /home/jenkins/dependency-check-data
         name: dependency-check-data
+    - name: zap
+      image: owasp/zap2docker-stable:latest
+      command:
+      - cat
+      tty: true
     volumes:
     - name: dependency-check-data
       hostPath:
@@ -213,6 +218,39 @@ spec:
                         reportFiles: 'trivy-report.html',
                         reportName: 'Trivy Security Report'
                     ])
+                }
+            }
+        }
+        stage('OWASP ZAP DAST') { 
+            when {
+                changeset "src/ratings/**"
+            }
+            steps {
+                container('zap') { 
+                    script {
+                        sh """
+                        # Create report directory
+                        mkdir -p zap-results
+
+                        # Run ZAP scan against your application
+                        # Replace with your actual application URL
+                        zaproxy -cmd \
+                            -quickurl http://bookinfo-ratings-${ENV_NAME}:8080 \
+                            -quickout zap-results/zap-report.html
+                        """
+
+                        // Archive the report
+                        archiveArtifacts artifacts: 'zap-results/zap-report.html', fingerprint: true, allowEmptyArchive: true
+                        
+                        // Publish the report
+                        publishHTML([
+                            allowMissing: false,
+                            alwaysLinkToLastBuild: true,
+                            reportDir: 'zap-results',
+                            reportFiles: 'zap-report.html',
+                            reportName: 'OWASP ZAP DAST Report'
+                        ])
+                    }
                 }
             }
         }
