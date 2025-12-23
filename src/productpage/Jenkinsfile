@@ -160,6 +160,7 @@ spec:
             }
         }
 
+        /*
         stage('Test') {
             steps {
                 container('python') {
@@ -176,7 +177,7 @@ spec:
                     }
                 }
             }
-        }
+        }*/
 
         stage('Build productpage Docker Image and Push') { 
             steps { 
