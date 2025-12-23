@@ -1,11 +1,12 @@
 FROM ruby:2.7-alpine
 
+USER root
+
 WORKDIR /app
 
 COPY Gemfile ./
 
-RUN bundle config set --local path 'vendor/bundle' && \
-    bundle install
+RUN bundle install
 
 COPY details.rb ./
 
