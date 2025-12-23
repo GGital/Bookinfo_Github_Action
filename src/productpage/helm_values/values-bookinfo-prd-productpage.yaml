@@ -1,20 +1,23 @@
 productpage:
-  namespace: bookinfo-prd
+  namespace: bookinfo-dev
   image: registry-gital.opsta.in.th/bookinfo/productpage
-  tag: prd
+  tag: dev
   replicas: 1
   imagePullSecrets: registry-bookinfo
   port: 9000
   healthCheckPath: "/health"
+
 ingress:
+  enabled: true
+  className: "nginx"
   annotations:
-    kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    ingress.gcp.kubernetes.io/pre-shared-cert: "bookinfo-gital-prd-cert"
-    kubernetes.io/ingress.allow-http: false
-  host: bookinfo-gital-prd.opsta.in.th
-  path: /*
-  serviceType: NodePort
+    nginx.ingress.kubernetes.io/use-regex: "true"
+  host: bookinfo-gital-dev.opsta.in.th
+  path: /
+  pathType: Prefix
+  serviceType: ClusterIP
+
 extraEnv:
   DETAILS_HOSTNAME: http://bookinfo-details-prd:9080
   RATINGS_HOSTNAME: http://bookinfo-ratings-prd:8080

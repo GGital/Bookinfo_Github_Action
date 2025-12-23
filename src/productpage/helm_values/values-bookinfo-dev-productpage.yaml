@@ -6,15 +6,17 @@ productpage:
   imagePullSecrets: registry-bookinfo
   port: 9000
   healthCheckPath: "/health"
+
 ingress:
+  enabled: true
+  className: "nginx"
   annotations:
-    kubernetes.io/ingress.class: "nginx"
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    ingress.gcp.kubernetes.io/pre-shared-cert: "bookinfo-gital-dev-cert"
-    kubernetes.io/ingress.allow-http: false
+    nginx.ingress.kubernetes.io/use-regex: "true"
   host: bookinfo-gital-dev.opsta.in.th
-  path: /*
-  serviceType: NodePort
+  path: /
+  pathType: Prefix
+  serviceType: ClusterIP
 extraEnv:
   DETAILS_HOSTNAME: http://bookinfo-details-dev:9080
   RATINGS_HOSTNAME: http://bookinfo-ratings-dev:8080
