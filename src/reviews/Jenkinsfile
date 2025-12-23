@@ -109,7 +109,7 @@ spec:
                                 -D sonar.projectName=${PROJECT_NAME} \
                                 -D sonar.projectVersion=${BRANCH_NAME}-${BUILD_NUMBER} \
                                 -D sonar.sources=src/main \
-                                -D sonar.java.binaries=build/classes
+                                -D sonar.java.binaries=bin/main/application
                                 """
                             }
 
