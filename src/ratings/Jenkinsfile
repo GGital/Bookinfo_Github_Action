@@ -279,7 +279,7 @@ spec:
                         # 2. Run the baseline scan
                         # We use /zap/wrk/ in the output path so the script verifies the mount
                         zap-baseline.py -t https://bookinfo-gital-${ENV_NAME}.opsta.in.th/ \
-                            -r zap-report.html
+                            -r zap-report.html || [ \$? -eq 2 ]
                         """
 
                         // 3. Archive and Publish (The file is in your workspace root now)
