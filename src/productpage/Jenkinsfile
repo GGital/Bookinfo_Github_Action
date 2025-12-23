@@ -171,7 +171,7 @@ spec:
                             sh 'pip install pytest'
                             
                             // Run tests
-                            sh 'python -m pytest tests/unit/ -v'
+                            sh 'python -m unittest discover tests/unit'
                         }
                     }
                 }
