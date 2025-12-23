@@ -269,27 +269,26 @@ spec:
                 changeset "src/ratings/**"
             }
             steps {
-                container('zap') { // Switch to the dedicated zap container
+                container('zap') { 
                     script {
-                        sh "mkdir -p zap-results"
-
-                        // Using the official Python wrapper (easier than raw zap.sh)
-                        // -t: target URL
-                        // -r: report name
                         sh """
+                        # 1. Create a symlink so ZAP script can find '/zap/wrk'
+                        # This points ZAP's internal 'work' folder to your Jenkins workspace
+                        ln -s \$(pwd) /zap/wrk
+
+                        # 2. Run the baseline scan
+                        # We use /zap/wrk/ in the output path so the script verifies the mount
                         zap-baseline.py -t https://bookinfo-gital-${ENV_NAME}.opsta.in.th/ \
                             -r zap-report.html
-                        
-                        # Move the report to our results folder
-                        mv /zap/wrk/zap-report.html ./zap-results/
                         """
 
-                        archiveArtifacts artifacts: 'zap-results/zap-report.html', allowEmptyArchive: true
+                        // 3. Archive and Publish (The file is in your workspace root now)
+                        archiveArtifacts artifacts: 'zap-report.html', fingerprint: true, allowEmptyArchive: true
                         
                         publishHTML([
                             allowMissing: false,
                             alwaysLinkToLastBuild: true,
-                            reportDir: 'zap-results',
+                            reportDir: '.',
                             reportFiles: 'zap-report.html',
                             reportName: 'OWASP ZAP DAST Report'
                         ])
