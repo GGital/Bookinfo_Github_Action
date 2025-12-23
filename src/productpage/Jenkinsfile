@@ -20,6 +20,12 @@ spec:
         limits:
           cpu: "2"
           memory: "4Gi"
+      command:
+      - dockerd
+      - --host=unix:///var/run/docker.sock
+      - --host=tcp://0.0.0.0:2375
+      - --storage-driver=overlay2
+      - --default-pids-limit=1024
       securityContext:
         privileged: true
     - name: helm
@@ -140,7 +146,7 @@ spec:
                             sh 'apk add --no-cache openjdk11-jre'
 
                             // Install application dependencies
-                            sh 'pip install -r requirements.txt'
+                            sh 'pip install --no-cache-dir --progress-bar off -r requirements.txt'
                             
                             // Run dependency Check
                             dependencyCheck(
