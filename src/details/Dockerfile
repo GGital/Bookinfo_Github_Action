@@ -7,9 +7,9 @@ WORKDIR /app
 COPY Gemfile ./
 
 RUN bundle config set --local path 'vendor/bundle' && \
-    bundle config set --local system 'false'
+    bundle config set --local system 'false' && \ 
+    bundle install
 
-RUN bundle install
 
 COPY details.rb ./
 
