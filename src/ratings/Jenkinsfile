@@ -176,7 +176,7 @@ spec:
                         -v $HOME/Library/Caches:/root/.cache/ \
                         aquasec/trivy:latest image --severity LOW,MEDIUM,HIGH \
                         --format template \
-                        --template "@/usr/local/share/trivy/templates/html.tpl" \
+                        --template "@html" \
                         --output trivy-report.html \
                         registry-gital.opsta.in.th/bookinfo/ratings:${ENV_NAME}
                     """
