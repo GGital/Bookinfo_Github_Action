@@ -9,9 +9,7 @@ ENV BUNDLE_APP_CONFIG=/app/bundle_config
 ENV GEM_HOME=/app/vendor/bundle
 ENV PATH="$GEM_HOME/bin:$PATH"
 
-RUN chmod -R 777 /app
-
-RUN apk add --no-cache build-base
+RUN chmod -R 777 /app && apk add --no-cache build-base
 
 COPY Gemfile ./
 
