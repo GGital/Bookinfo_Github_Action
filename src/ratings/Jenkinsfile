@@ -31,6 +31,11 @@ spec:
       command:
       - cat
       tty: true
+    - name: zap
+      image: ghcr.io/zaproxy/zaproxy:stable
+      command:
+      - cat
+      tty: true
     - name: java-node
       image: timbru31/java-node:11-alpine-jre-20
       command:
@@ -260,37 +265,37 @@ spec:
     }
 }
     stage('OWASP ZAP DAST') { 
-    when {
-        changeset "src/ratings/**"
-    }
-    steps {
-        script {
-            // 1. Create directory for results
-            sh "mkdir -p zap-results"
+            when {
+                changeset "src/ratings/**"
+            }
+            steps {
+                container('zap') { // Switch to the dedicated zap container
+                    script {
+                        sh "mkdir -p zap-results"
 
-            // 2. Run ZAP scan
-            // -cmd: runs in command line mode
-            // -quickurl: the target to scan
-            // -quickout: where to save the HTML report
-            sh """
-            zaproxy -cmd \
-                -quickurl https://bookinfo-gital-${ENV_NAME}.opsta.in.th/ \
-                -quickout \$(pwd)/zap-results/zap-report.html
-            """
+                        // Using the official Python wrapper (easier than raw zap.sh)
+                        // -t: target URL
+                        // -r: report name
+                        sh """
+                        zap-baseline.py -t https://bookinfo-gital-${ENV_NAME}.opsta.in.th/ \
+                            -r zap-report.html
+                        
+                        # Move the report to our results folder
+                        mv /zap/wrk/zap-report.html ./zap-results/
+                        """
 
-            // 3. Archive the report as a build artifact
-            archiveArtifacts artifacts: 'zap-results/zap-report.html', fingerprint: true, allowEmptyArchive: true
-            
-            // 4. Publish the report to the Jenkins UI
-            publishHTML([
-                allowMissing: false,
-                alwaysLinkToLastBuild: true,
-                reportDir: 'zap-results',
-                reportFiles: 'zap-report.html',
-                reportName: 'OWASP ZAP DAST Report'
-            ])
+                        archiveArtifacts artifacts: 'zap-results/zap-report.html', allowEmptyArchive: true
+                        
+                        publishHTML([
+                            allowMissing: false,
+                            alwaysLinkToLastBuild: true,
+                            reportDir: 'zap-results',
+                            reportFiles: 'zap-report.html',
+                            reportName: 'OWASP ZAP DAST Report'
+                        ])
+                    }
+                }
+            }
         }
-    }
-}
         } // End stage
     }
