@@ -8,7 +8,7 @@ productpage:
   healthCheckPath: "/health"
 ingress:
   annotations:
-    kubernetes.io/ingress.class: "gce"
+    kubernetes.io/ingress.class: "nginx"
     kubernetes.io/ingress.global-static-ip-name: "bookinfo-ip"
     ingress.gcp.kubernetes.io/pre-shared-cert: "bookinfo-gital-uat-cert"
     kubernetes.io/ingress.allow-http: false
