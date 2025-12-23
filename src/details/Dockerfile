@@ -6,6 +6,8 @@ WORKDIR /app
 
 COPY Gemfile ./
 
+ENV BUNDLE_PATH='/app/vendor/bundle'
+
 RUN bundle install
 
 COPY details.rb ./

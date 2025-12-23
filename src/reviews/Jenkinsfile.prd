@@ -1,0 +1,88 @@
+def scmVars
+
+pipeline {
+    agent{
+        kubernetes { 
+            yaml """
+            apiVersion: v1
+            kind: Pod
+            spec:
+              containers:
+              - name: helm
+                image: google/cloud-sdk:alpine
+                command:
+                - cat
+                tty: true
+            """
+        }
+    }
+
+    parameters { 
+        gitParameter name: "TAG",
+                     selectedValue: "TOP",
+                     sortMode: "DESCENDING_SMART",
+                     tagFilter: "build-*",
+                     type: "PT_TAG"
+    }
+
+    options {
+        // This prevents the "Empty String" Git error by stopping the automatic clone
+        skipDefaultCheckout()
+    }
+
+    stages { 
+        stage('Clone reviews source code') { 
+            steps { 
+                script {
+                    scmVars = checkout([
+                        $class: 'GitSCM',
+                        branches: [[name: "refs/tags/${params.TAG}"]],
+                        userRemoteConfigs: [[
+                            credentialsId: 'bookinfo-git-deploy-key',
+                            url: 'git@gitlab.com:ggital-group/bookinfo.git'
+                        ]]])
+                }
+            }
+        }
+        stage('Deploy reviews with Helm Chart') {
+            steps {
+                container('helm') {
+                    script { 
+                        withCredentials([file(credentialsId: 'gke-sa-key-json', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                            dir('src/reviews') { 
+                                sh """
+                                # 1. Install dependencies for the Helm installer and the GKE Auth Plugin
+                                # Added openssl for checksum verification and bash to run the installer
+                                apk add --no-cache curl openssl bash
+
+                                # 2. Install Helm
+                                # Using -s -- -v to pass flags if needed, or simply piping to bash
+                                curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | VERIFY_CHECKSUM=false bash
+
+                                # 3. Install the GKE Auth Plugin
+                                gcloud components install gke-gcloud-auth-plugin --quiet
+
+                                # 4. CRITICAL: Tell kubectl/helm to use the new GKE plugin
+                                export USE_GKE_GCLOUD_AUTH_PLUGIN=True
+
+                                # 5. Authenticate and Get Credentials
+                                gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
+                                
+                                # Replace with your actual cluster details
+                                gcloud container clusters get-credentials bookinfo --region asia-southeast1 --project gifted-airport-481410-e7
+                                
+                                # 6. Run Helm
+                                helm upgrade --install \
+                                -f ./helm_values/values-bookinfo-prd-reviews.yaml \
+                                --set extraEnv.COMMIT_ID=${scmVars.GIT_COMMIT} \
+                                --set reviews.tag=${params.TAG} \
+                                --wait --namespace bookinfo-prd \
+                                bookinfo-reviews-prd ./helm
+                            """
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
