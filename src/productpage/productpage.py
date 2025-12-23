@@ -45,6 +45,7 @@ except ImportError:
 http_client.HTTPConnection.debuglevel = 1
 
 app = Flask(__name__)
+
 logging.basicConfig(stream=sys.stdout, level=logging.DEBUG)
 requests_log = logging.getLogger("requests.packages.urllib3")
 requests_log.setLevel(logging.DEBUG)
