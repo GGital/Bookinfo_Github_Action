@@ -36,14 +36,14 @@ spec:
       command:
       - cat
       tty: true
-      volumeMounts:
-      - mountPath: /home/jenkins/dependency-check-data
-        name: dependency-check-data
     - name: python
       image: python:3.9-alpine
       command:
       - cat
       tty: true
+      volumeMounts:
+      - mountPath: /home/jenkins/dependency-check-data
+        name: dependency-check-data
     volumes:
     - name: dependency-check-data
       hostPath:
