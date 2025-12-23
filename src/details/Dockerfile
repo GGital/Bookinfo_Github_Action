@@ -1,12 +1,13 @@
 FROM ruby:2.7-alpine
 
-USER root
+RUN apk add --no-cache build-base
 
 WORKDIR /app
 
 COPY Gemfile ./
 
-ENV BUNDLE_PATH='/app/vendor/bundle'
+RUN bundle config set --local path 'vendor/bundle' && \
+    bundle config set --local system 'false'
 
 RUN bundle install
 
@@ -14,4 +15,4 @@ COPY details.rb ./
 
 EXPOSE 9080
 
-CMD ["ruby", "details.rb", "9080"]
+CMD ["bundle", "exec", "ruby", "details.rb", "9080"]
