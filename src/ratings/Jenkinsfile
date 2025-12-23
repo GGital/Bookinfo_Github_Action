@@ -172,7 +172,7 @@ spec:
                 container('docker') { 
                     sh """
                     # 1. Download the official HTML template to the current workspace
-                    curl -sSL https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -o trivy-html.tpl
+                    wget https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -O trivy-html.tpl
 
                     # 2. Run Trivy and mount the workspace so it can see the downloaded template
                     docker run --rm \
