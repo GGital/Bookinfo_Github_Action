@@ -131,15 +131,15 @@ spec:
 
         stage('OWASP Dependency Check') { 
             steps { 
-                container('java-node') {
+                container('python') {
                     script { 
                         dir("./src/productpage") { 
 
-                            // Install Python and pip
-                            sh 'apk add --no-cache python3 py3-pip'
+                            // Install Java for dependency-check
+                            sh 'apk add --no-cache openjdk11-jre'
 
                             // Install application dependencies
-                            sh 'pip3 install -r requirements.txt'
+                            sh 'pip install -r requirements.txt'
                             
                             // Run dependency Check
                             dependencyCheck(
