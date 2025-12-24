@@ -231,16 +231,14 @@ spec:
             steps {
         container('helm') {
             script { 
-                withKubeConfig([credentialsId: 'gke-kubeconfig']) {
-                        dir('src/ratings') { 
-                            sh """
-                                helm upgrade --install \
-                                -f ./helm_values/values-bookinfo-${ENV_NAME}-ratings.yaml \
-                                --set extraEnv.COMMIT_ID=${scmVars.GIT_COMMIT} \
-                                --wait --namespace bookinfo-${ENV_NAME} \
-                                bookinfo-ratings-${ENV_NAME} ./helm
-                            """
-                        }
+                    dir('src/ratings') { 
+                        sh """
+                            helm upgrade --install \
+                            -f ./helm_values/values-bookinfo-${ENV_NAME}-ratings.yaml \
+                            --set extraEnv.COMMIT_ID=${scmVars.GIT_COMMIT} \
+                            --wait --namespace bookinfo-${ENV_NAME} \
+                            bookinfo-ratings-${ENV_NAME} ./helm
+                        """
                 }
             }
         }
