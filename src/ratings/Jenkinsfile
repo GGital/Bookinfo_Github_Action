@@ -232,7 +232,6 @@ spec:
         container('helm') {
             script { 
                 withKubeConfig([credentialsId: 'gke-kubeconfig']) {
-                    withCredentials([file(credentialsId: 'gke-sa-key-json', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                         dir('src/ratings') { 
                             sh """
                                 helm upgrade --install \
@@ -242,7 +241,6 @@ spec:
                                 bookinfo-ratings-${ENV_NAME} ./helm
                             """
                         }
-                    }
                 }
             }
         }
