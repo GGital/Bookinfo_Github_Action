@@ -55,7 +55,7 @@ spec:
         }
     }
     
-    // Defining Environment Variables
+    // Defining Environment Variables s
     environment {
         ENV_NAME = "${BRANCH_NAME == "main" ? "uat" : "${BRANCH_NAME}"}"
         SCANNER_HOME = tool 'sonarqube-scanner'
