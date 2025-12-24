@@ -22,7 +22,7 @@ spec:
       securityContext:
         privileged: true
     - name: helm
-      image: kiwigrid/gcloud-kubectl-helm:latest
+      image: lachlanevenson/k8s-helm:v3.5.0
       command:
       - cat
       tty: true
