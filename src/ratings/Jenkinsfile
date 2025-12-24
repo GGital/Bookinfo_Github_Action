@@ -231,19 +231,17 @@ spec:
             steps {
         container('helm') {
             script { 
-                withCredentials([file(credentialsId: 'gke-sa-key-json', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
-                    dir('src/ratings') { 
-                        sh """
-    gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-    
-    gcloud container clusters get-credentials ${GKE_CLUSTER} --region ${GKE_REGION} --project ${GKE_PROJECT}
-    
-    helm upgrade --install \
-    -f ./helm_values/values-bookinfo-${ENV_NAME}-ratings.yaml \
-    --set extraEnv.COMMIT_ID=${scmVars.GIT_COMMIT} \
-    --wait --namespace bookinfo-${ENV_NAME} \
-    bookinfo-ratings-${ENV_NAME} ./helm
-"""
+                withKubeConfig([credentialsId: 'gke-kubeconfig']) {
+                    withCredentials([file(credentialsId: 'gke-sa-key-json', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
+                        dir('src/ratings') { 
+                            sh """
+                                helm upgrade --install \
+                                -f ./helm_values/values-bookinfo-${ENV_NAME}-ratings.yaml \
+                                --set extraEnv.COMMIT_ID=${scmVars.GIT_COMMIT} \
+                                --wait --namespace bookinfo-${ENV_NAME} \
+                                bookinfo-ratings-${ENV_NAME} ./helm
+                            """
+                        }
                     }
                 }
             }
