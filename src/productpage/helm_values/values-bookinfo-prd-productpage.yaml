@@ -13,7 +13,7 @@ ingress:
   annotations:
     nginx.ingress.kubernetes.io/ssl-redirect: "true"
     nginx.ingress.kubernetes.io/use-regex: "true"
-  host: bookinfo-gital-prd.opsta.in.th
+  host: bookinfo-gital.opsta.in.th
   path: /
   pathType: Prefix
   serviceType: ClusterIP
