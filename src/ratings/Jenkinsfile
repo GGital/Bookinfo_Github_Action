@@ -224,6 +224,7 @@ spec:
                 }
             }
         }
+        // Using Google Service Account to deploy to GKE
         stage('Deploy ratings with Helm Chart') { 
             when {
                 changeset "src/ratings/**"
