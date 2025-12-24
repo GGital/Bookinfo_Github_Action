@@ -22,7 +22,12 @@ spec:
       securityContext:
         privileged: true
     - name: helm
-      image: google/cloud-sdk:alpine
+      image: lachlanevenson/k8s-helm:v3.5.0
+      command:
+      - cat
+      tty: true
+    - name: zap
+      image: ghcr.io/zaproxy/zaproxy:stable
       command:
       - cat
       tty: true
@@ -48,7 +53,7 @@ spec:
 
                 
         }
-    }    
+    }
     
     // Defining Environment Variables
     environment {
@@ -59,8 +64,11 @@ spec:
     }
 
     stages{
-        
+
         stage('Clone reviews source code') { 
+            when {
+                changeset "src/reviews/**"
+            }
             steps {
                 container('jnlp') {  // jnlp is basic slave to connect with jenkins master
                     script {
@@ -72,6 +80,9 @@ spec:
             } // End steps
         } // End stage
         stage('KICS') { 
+            when {
+                changeset "src/reviews/**"
+            }
             steps {
                 container('kics') { 
                     script { 
@@ -98,6 +109,9 @@ spec:
             }
         }
         stage('Sonarqube') { 
+            when {
+                changeset "src/reviews/**"
+            }
             steps { 
                 container('java-gradle') { 
                     script {
@@ -126,6 +140,9 @@ spec:
         }
 
         stage('OWASP Dependency Check') { 
+            when {
+                changeset "src/reviews/**"
+            }
             steps { 
                 container('java-gradle') {
                     script { 
@@ -154,6 +171,9 @@ spec:
         }
 
         stage('Build reviews Docker Image and Push') { 
+            when {
+                changeset "src/reviews/**"
+            }
             steps { 
                 container('docker') { // docker matches with name in yaml manifest file 
                     dir('src/reviews') { 
@@ -167,6 +187,9 @@ spec:
                 } // End steps
             } // End stage
         stage('Trivy') { 
+            when {
+                changeset "src/reviews/**"
+            }
             steps{
                 container('docker') { 
                     sh """
@@ -198,44 +221,51 @@ spec:
             }
         }
         stage('Deploy reviews with Helm Chart') { 
-    steps {
+            when {
+                changeset "src/reviews/**"
+            }
+            steps {
         container('helm') {
             script { 
-                withCredentials([file(credentialsId: 'gke-sa-key-json', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                     dir('src/reviews') { 
                         sh """
-    # 1. Install dependencies for the Helm installer and the GKE Auth Plugin
-    # Added openssl for checksum verification and bash to run the installer
-    apk add --no-cache curl openssl bash
-
-    # 2. Install Helm
-    # Using -s -- -v to pass flags if needed, or simply piping to bash
-    curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | VERIFY_CHECKSUM=false bash
-
-    # 3. Install the GKE Auth Plugin
-    gcloud components install gke-gcloud-auth-plugin --quiet
-
-    # 4. CRITICAL: Tell kubectl/helm to use the new GKE plugin
-    export USE_GKE_GCLOUD_AUTH_PLUGIN=True
-
-    # 5. Authenticate and Get Credentials
-    gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-    
-    # Replace with your actual cluster details
-    gcloud container clusters get-credentials bookinfo --region asia-southeast1 --project gifted-airport-481410-e7
-    
-    # 6. Run Helm
-    helm upgrade --install \
-    -f ./helm_values/values-bookinfo-${ENV_NAME}-reviews.yaml \
-    --set extraEnv.COMMIT_ID=${scmVars.GIT_COMMIT} \
-    --wait --namespace bookinfo-${ENV_NAME} \
-    bookinfo-reviews-${ENV_NAME} ./helm
-"""
+                        helm upgrade --install \
+                        -f ./helm_values/values-bookinfo-${ENV_NAME}-reviews.yaml \
+                        --set extraEnv.COMMIT_ID=${scmVars.GIT_COMMIT} \
+                        --wait --namespace bookinfo-${ENV_NAME} \
+                        bookinfo-reviews-${ENV_NAME} ./helm
+                    """
+                        }
                     }
                 }
             }
         }
-    }
-}
+        stage('OWASP ZAP DAST') { 
+            when {
+                changeset "src/ratings/**"
+            }
+            steps {
+                container('zap') { 
+                    script {
+                        sh """
+                        ln -s \$(pwd) /zap/wrk
+
+                        zap-baseline.py -t https://bookinfo-gital-${ENV_NAME}.opsta.in.th/ \
+                            -r zap-report.html || [ \$? -eq 2 ]
+                        """
+
+                        archiveArtifacts artifacts: 'zap-report.html', fingerprint: true, allowEmptyArchive: true
+                        
+                        publishHTML([
+                            allowMissing: false,
+                            alwaysLinkToLastBuild: true,
+                            reportDir: '.',
+                            reportFiles: 'zap-report.html',
+                            reportName: 'OWASP ZAP DAST Report'
+                        ])
+                    }
+                }
+            }
+        }
         } // End stage
     }

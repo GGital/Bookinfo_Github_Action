@@ -3,12 +3,12 @@ kind: Service
 metadata:
   name: {{ .Release.Name }}
   namespace: {{ .Values.productpage.namespace }}
-  annotations:
-    cloud.google.com/neg: '{"ingress": true}'
 spec:
-  type: {{ .Values.ingress.serviceType }}
+  type: {{ .Values.ingress.serviceType | default "ClusterIP" }}
   selector:
     app: {{ .Release.Name }}
   ports:
     - port: {{ .Values.productpage.port }}
       targetPort: {{ .Values.productpage.port }}
+      protocol: TCP
+      name: http

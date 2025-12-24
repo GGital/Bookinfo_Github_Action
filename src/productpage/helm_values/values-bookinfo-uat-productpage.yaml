@@ -1,20 +1,22 @@
 productpage:
-  namespace: bookinfo-uat
+  namespace: bookinfo-dev
   image: registry-gital.opsta.in.th/bookinfo/productpage
-  tag: uat
+  tag: dev
   replicas: 1
   imagePullSecrets: registry-bookinfo
   port: 9000
   healthCheckPath: "/health"
+
 ingress:
+  enabled: true
+  className: "nginx"
   annotations:
-    kubernetes.io/ingress.class: "gce"
-    kubernetes.io/ingress.global-static-ip-name: "bookinfo-ip"
-    ingress.gcp.kubernetes.io/pre-shared-cert: "bookinfo-gital-uat-cert"
-    kubernetes.io/ingress.allow-http: false
-  host: bookinfo-gital-uat.opsta.in.th
-  path: /*
-  serviceType: NodePort
+    nginx.ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/use-regex: "true"
+  host: bookinfo-gital-dev.opsta.in.th
+  path: /
+  pathType: Prefix
+  serviceType: ClusterIP
 extraEnv:
   DETAILS_HOSTNAME: http://bookinfo-details-uat:9080
   RATINGS_HOSTNAME: http://bookinfo-ratings-uat:8080
