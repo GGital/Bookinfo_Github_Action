@@ -9,7 +9,7 @@ pipeline {
             spec:
               containers:
               - name: helm
-                image: google/cloud-sdk:alpine
+                image: lachlanevenson/k8s-helm:v3.5.0
                 command:
                 - cat
                 tty: true
@@ -48,30 +48,8 @@ pipeline {
             steps {
                 container('helm') {
                     script { 
-                        withCredentials([file(credentialsId: 'gke-sa-key-json', variable: 'GOOGLE_APPLICATION_CREDENTIALS')]) {
                             dir('src/details') { 
                                 sh """
-                                # 1. Install dependencies for the Helm installer and the GKE Auth Plugin
-                                # Added openssl for checksum verification and bash to run the installer
-                                apk add --no-cache curl openssl bash
-
-                                # 2. Install Helm
-                                # Using -s -- -v to pass flags if needed, or simply piping to bash
-                                curl -fsSL https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | VERIFY_CHECKSUM=false bash
-
-                                # 3. Install the GKE Auth Plugin
-                                gcloud components install gke-gcloud-auth-plugin --quiet
-
-                                # 4. CRITICAL: Tell kubectl/helm to use the new GKE plugin
-                                export USE_GKE_GCLOUD_AUTH_PLUGIN=True
-
-                                # 5. Authenticate and Get Credentials
-                                gcloud auth activate-service-account --key-file=$GOOGLE_APPLICATION_CREDENTIALS
-                                
-                                # Replace with your actual cluster details
-                                gcloud container clusters get-credentials bookinfo --region asia-southeast1 --project gifted-airport-481410-e7
-                                
-                                # 6. Run Helm
                                 helm upgrade --install \
                                 -f ./helm_values/values-bookinfo-prd-details.yaml \
                                 --set extraEnv.COMMIT_ID=${scmVars.GIT_COMMIT} \
@@ -80,9 +58,9 @@ pipeline {
                                 bookinfo-details-prd ./helm
                             """
                             }
-                        }
                     }
                 }
             }
         }
     }
+}

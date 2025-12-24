@@ -61,9 +61,6 @@ spec:
         SCANNER_HOME = tool 'sonarqube-scanner'
         PROJECT_KEY = "bookinfo:ratings"
         PROJECT_NAME = "bookinfo:ratings"
-        GKE_CLUSTER = 'bookinfo'
-        GKE_REGION  = 'asia-southeast1'
-        GKE_PROJECT = 'gifted-airport-481410-e7'
     }
 
     stages{

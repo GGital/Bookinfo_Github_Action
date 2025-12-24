@@ -56,7 +56,7 @@ spec:
                                 uatImage = docker.image("registry-gital.opsta.in.th/bookinfo/ratings:uat")
                                 uatImage.pull()
 
-                                uatImage.push("build-${BUILD_NUMBER}")
+                                uatImage.push("build-${GIT_COMMIT.take(7)}")
                                 
                             }
                         }
@@ -70,7 +70,7 @@ spec:
                             sshagent(credentials: ['bookinfo-git-deploy-key']) {
                                 sh """
                                 # Git tag first
-                                git tag build-${BUILD_NUMBER}
+                                git tag build-${GIT_COMMIT.take(7)}
                                 # Push tag back to Gitlab
                                 SSH_AUTH_SOCK=${SSH_AUTH_SOCK} \
                                 GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" \
