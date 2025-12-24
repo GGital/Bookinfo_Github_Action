@@ -67,7 +67,7 @@ spec:
     }
 
     stages{
-        
+        // Stage to clone the source code
         stage('Clone ratings source code') { 
             when {
                 changeset "src/ratings/**"
