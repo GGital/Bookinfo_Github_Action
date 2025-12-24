@@ -10,3 +10,4 @@ extraEnv:
   ENABLE_RATINGS: "true"
   RATINGS_SERVICE: "http://bookinfo-ratings-prd:8080"
   STAR_COLOR: "black"
+  COMMIT_ID: CHANGEME

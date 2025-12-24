@@ -6,4 +6,6 @@ details:
   imagePullSecrets: registry-bookinfo
   port: 9080
   healthCheckPath: "/health"
-extraEnv: {}
+extraEnv: {
+  COMMIT_ID: CHANGEME
+}

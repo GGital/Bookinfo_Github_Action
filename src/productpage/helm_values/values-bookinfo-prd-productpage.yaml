@@ -23,3 +23,4 @@ extraEnv:
   RATINGS_HOSTNAME: http://bookinfo-ratings-prd:8080
   REVIEWS_HOSTNAME: http://bookinfo-reviews-prd:9080
   FLOOD_FACTOR: 0
+  COMMIT_ID: CHANGEME
