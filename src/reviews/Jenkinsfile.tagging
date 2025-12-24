@@ -1,3 +1,5 @@
+def scmVars
+
 pipeline { 
     
     agent{
@@ -40,13 +42,17 @@ spec:
                 steps { 
                     container('jnlp') { 
                         script { 
-                            git branch: "main",
-                                credentialsId: "bookinfo-git-deploy-key",
-                                url: "git@gitlab.com:ggital-group/bookinfo.git"
-                            }
+                            scmVars = checkout([
+                                $class: 'GitSCM',
+                                branches: [[name: "main"]],
+                                userRemoteConfigs: [[
+                                    credentialsId: "bookinfo-git-deploy-key",
+                                    url: "git@gitlab.com:ggital-group/bookinfo.git"
+                                ]]])
                         }
                     }
                 }
+        }
             stage("Tag Docker image") {
                 steps {
                     container("docker") {
@@ -56,7 +62,7 @@ spec:
                                 uatImage = docker.image("registry-gital.opsta.in.th/bookinfo/reviews:uat")
                                 uatImage.pull()
 
-                                uatImage.push("build-${GIT_COMMIT.take(7)}")
+                                uatImage.push("build-${scmVars.GIT_COMMIT.take(7)}")
                                 
                             }
                         }
@@ -70,7 +76,7 @@ spec:
                             sshagent(credentials: ['bookinfo-git-deploy-key']) {
                                 sh """
                                 # Git tag first
-                                git tag build-${GIT_COMMIT.take(7)}
+                                git tag build-${scmVars.GIT_COMMIT.take(7)}
                                 # Push tag back to Gitlab
                                 SSH_AUTH_SOCK=${SSH_AUTH_SOCK} \
                                 GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" \
@@ -84,3 +90,4 @@ spec:
         }
         
     }
+    
