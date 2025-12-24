@@ -3,13 +3,19 @@ externalURL: https://registry-gital.opsta.in.th
 expose:
   type: ingress
   ingress:
-    controller: gce
+    controller: default
+    className: nginx
     hosts:
       core: registry-gital.opsta.in.th
     annotations:
-      kubernetes.io/ingress.global-static-ip-name: harbor-ip
-      ingress.gcp.kubernetes.io/pre-shared-cert: harbor-origin-cert
-      kubernetes.io/ingress.allow-http: "false"
+      nginx.ingress.kubernetes.io/proxy-body-size: "0"
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/proxy-read-timeout: "900"
+      nginx.ingress.kubernetes.io/proxy-send-timeout: "900"
 
 persistence:
   enabled: true
+
+tls:
+  enabled: true
+  secretName: harbor-origin-cert
