@@ -101,6 +101,6 @@ Deploy-job:
     - cd src/ratings
     - helm upgrade --install \
       -f ./helm_values/values-bookinfo-${ENV_NAME}-ratings.yaml \
-      --set extraEnv.COMMIT_ID=${scmVars.GIT_COMMIT} \
+      --set extraEnv.COMMIT_ID=$CI_COMMIT_SHA \
       --wait --namespace bookinfo-${ENV_NAME} \
       bookinfo-ratings-${ENV_NAME} ./helm
