@@ -1,3 +1,13 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      variables:
+        ENV_NAME: "uat"
+
+    - if: $CI_COMMIT_BRANCH
+      variables:
+        ENV_NAME: $CI_COMMIT_BRANCH
+
 stages:
   - prepare&security
   - build
@@ -27,8 +37,6 @@ KICS-job:
 Sonarqube-job:
   stage: prepare&security
   image: timbru31/java-node:11-alpine-jre-20
-  variables:
-    - SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
   script:
     - cd src/ratings
     - sonar-scanner
