@@ -95,7 +95,7 @@ Trivy-check:
 Deploy-job:
   stage: deploy
   image:
-    name: google/cloud-sdk:slim
+    name: kiwigrid/gcloud-kubectl-helm:latest
     entrypoint: [""]
   identity: google_cloud
   script:
