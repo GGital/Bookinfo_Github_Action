@@ -54,9 +54,14 @@ Sonarqube-job:
 
 build-job:
   stage: build
-  image:
-    name: docker:20.10.3-dind
-    entrypoint: [""]
+  image: docker:24.0.5
+  services:
+    - name: docker:20.10.3-dind # This matches your Jenkins version
+      alias: docker
+      command:
+        - "--host=unix:///var/run/docker.sock"
+        - "--host=tcp://0.0.0.0:2375"
+        - "--storage-driver=overlay2"
   variables:
     IMAGE_NAME: "registry-gital.opsta.in.th/bookinfo/ratings"
     IMAGE_TAG: "${ENV_NAME}" # Ensure ENV_NAME is defined in your pipeline or as a variable
@@ -69,7 +74,7 @@ build-job:
 Trivy-check:
   stage: Image-Security
   image:
-    name: docker:20.10.3-dind
+    name: docker:24.0.5
     entrypoint: [""]
   script:
     - wget https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -O trivy-html.tpl
