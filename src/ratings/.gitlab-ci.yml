@@ -74,26 +74,23 @@ build-job:
 Trivy-check:
   stage: Image-Security
   image:
-    name: docker:24.0.5
+    name: aquasec/trivy:latest
     entrypoint: [""]
+  variables:
+    TRIVY_USERNAME: $REGISTRY_USER
+    TRIVY_PASSWORD: $REGISTRY_PASSWORD
   script:
-    - wget https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -O trivy-html.tpl
-    - docker run --rm \
-      -v /var/run/docker.sock:/var/run/docker.sock \
-      -v \$(pwd):/workspace \
-      aquasec/trivy:latest image \
-      --severity LOW,MEDIUM,HIGH \
-      --format template \
-      --template "@/workspace/trivy-html.tpl" \
-      --output /workspace/trivy-report.html \
+    - mkdir -p trivy-results
+    - trivy image
+      --severity LOW,MEDIUM,HIGH
+      --format template
+      --template "@/contrib/html.tpl"
+      --output trivy-results/trivy-report.html
       registry-gital.opsta.in.th/bookinfo/ratings:${ENV_NAME}
   artifacts:
-    untracked: false
-    when: on_success
-    access: all
-    expire_in: "30 days"
+    when: always
     paths:
-      - trivy-report.html
+      - trivy-results/trivy-report.html
 
 Deploy-job:
   stage: deploy
