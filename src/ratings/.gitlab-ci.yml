@@ -112,6 +112,7 @@ Deploy-job:
 
     # 2. ACTIVATE your account (This is the missing step!)
     - gcloud auth login --cred-file=.gcp_temp_cred.json
+    - gcloud projects describe gifted-airport-481410-e7
     - gcloud config set project gifted-airport-481410-e7
 
     # 3. Now verify identity (It should now show YOUR service account)
