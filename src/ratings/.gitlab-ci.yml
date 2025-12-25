@@ -21,18 +21,18 @@ variables:
 
 KICS-job:
   stage: prepare&security
-  image: checkmarx/kics:latest
+  image:
+    name: checkmarx/kics:latest
+    entrypoint: [""]
   script:
     - cd src/ratings
-    - sh 'mkdir -p kics-results'
-    - sh 'kics scan -p . --report-formats html --output-path kics-results/ --output-name scan-report --ignore-on-exit results'
+    - mkdir -p kics-results
+    - kics scan -p . --report-formats html --output-path kics-results/ --output-name scan-report --ignore-on-exit results
   artifacts:
-    untracked: false
-    when: on_success
-    access: all
-    expire_in: "30 days"
+    when: always
     paths:
-      - kics-results/scan-report.html
+      - src/ratings/kics-results/scan-report.html
+    expire_in: "30 days"
 
 Sonarqube-job:
   stage: prepare&security
@@ -54,7 +54,9 @@ Sonarqube-job:
 
 build-job:
   stage: build
-  image: docker:20.10.3-dind
+  image:
+    name: docker:20.10.3-dind
+    entrypoint: [""]
   variables:
     IMAGE_NAME: "registry-gital.opsta.in.th/bookinfo/ratings"
     IMAGE_TAG: "${ENV_NAME}" # Ensure ENV_NAME is defined in your pipeline or as a variable
@@ -66,7 +68,9 @@ build-job:
 
 Trivy-check:
   stage: Image-Security
-  image: docker:20.10.3-dind
+  image:
+    name: docker:20.10.3-dind
+    entrypoint: [""]
   script:
     - wget https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -O trivy-html.tpl
     - docker run --rm \
@@ -88,7 +92,9 @@ Trivy-check:
 
 Deploy-job:
   stage: deploy
-  image: lachlanevenson/k8s-helm:v3.5.0
+  image:
+    name: lachlanevenson/k8s-helm:v3.5.0
+    entrypoint: [""]
   script:
     - cd src/ratings
     - helm upgrade --install \
