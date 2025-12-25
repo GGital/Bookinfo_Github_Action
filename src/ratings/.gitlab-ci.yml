@@ -100,6 +100,16 @@ Deploy-job:
   identity: google_cloud
   script:
     - cd src/ratings
+    # 1. Check which identity is active
+    - echo "Current Identity:"
+    - gcloud auth list
+    - gcloud config list account
+    # 2. Check the Project ID currently set
+    - echo "Current Project:"
+    - gcloud config get-value project
+    # 3. Test if you can list clusters at all (Minimum permission test)
+    - echo "Testing cluster visibility..."
+    - gcloud container clusters list
     - gcloud container clusters get-credentials bookinfo --zone asia-southeast1 --project gifted-airport-481410-e7
     - |
       helm upgrade --install \
