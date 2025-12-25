@@ -110,13 +110,9 @@ Deploy-job:
       --output-file=.gcp_temp_cred.json
       --credential-source-file=.ci_job_jwt_file
 
-    # 2. ACTIVATE your account (This is the missing step!)
+    # Authenticate
     - gcloud auth login --cred-file=.gcp_temp_cred.json
-    - gcloud projects describe gifted-airport-481410-e7
     - gcloud config set project gifted-airport-481410-e7
-
-    # 3. Now verify identity (It should now show YOUR service account)
-    - gcloud auth list
     # 4. Connect to GKE
     - gcloud container clusters get-credentials bookinfo --zone asia-southeast1 --project gifted-airport-481410-e7
     - |
