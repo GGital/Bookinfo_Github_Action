@@ -1,0 +1,90 @@
+stages:
+  - prepare&security
+  - build
+  - Image-Security
+  - deploy
+  - DAST
+
+variables:
+  PROJECT_KEY: "bookinfo:ratings"
+  PROJECT_NAME: "bookinfo:ratings"
+
+KICS-job:
+  stage: prepare&security
+  image: checkmarx/kics:latest
+  script:
+    - cd src/ratings
+    - mkdir -p kics-results
+    - kics scan -p . --report-formats html --output-path kics-results/ --output-name scan-report --ignore-on-exit results
+  artifacts:
+    untracked: false
+    when: on_success
+    access: all
+    expire_in: "30 days"
+    paths:
+      - kics-results/scan-report.html
+
+Sonarqube-job:
+  stage: prepare&security
+  image: timbru31/java-node:11-alpine-jre-20
+  variables:
+    - SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+  script:
+    - cd src/ratings
+    - sonar-scanner
+      -Dsonar.projectKey=${PROJECT_KEY}
+      -Dsonar.projectName=${PROJECT_NAME}
+      -Dsonar.sources=./src
+      -Dsonar.host.url=${SONAR_HOST_URL}
+      -Dsonar.token=${SONAR_TOKEN}
+      -Dsonar.qualitygate.wait=true
+      -Dsonar.qualitygate.timeout=60
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+
+build-job:
+  stage: build
+  image: docker:20.10.3-dind
+  variables:
+    IMAGE_NAME: "registry-gital.opsta.in.th/bookinfo/ratings"
+    IMAGE_TAG: "${ENV_NAME}" # Ensure ENV_NAME is defined in your pipeline or as a variable
+  script:
+    - echo "$REGISTRY_PASSWORD" | docker login $REGISTRY_URL -u $REGISTRY_USER --password-stdin
+    - cd src/ratings
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker push $IMAGE_NAME:$IMAGE_TAG
+
+Trivy-check:
+  stage: Image-Security
+  image: docker:20.10.3-dind
+  script:
+    - wget https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl -O trivy-html.tpl
+    - docker run --rm \
+      -v /var/run/docker.sock:/var/run/docker.sock \
+      -v \$(pwd):/workspace \
+      aquasec/trivy:latest image \
+      --severity LOW,MEDIUM,HIGH \
+      --format template \
+      --template "@/workspace/trivy-html.tpl" \
+      --output /workspace/trivy-report.html \
+      registry-gital.opsta.in.th/bookinfo/ratings:${ENV_NAME}
+  artifacts:
+    untracked: false
+    when: on_success
+    access: all
+    expire_in: "30 days"
+    paths:
+      - trivy-report.html
+
+Deploy-job:
+  stage: deploy
+  image: lachlanevenson/k8s-helm:v3.5.0
+  script:
+    - cd src/ratings
+    - helm upgrade --install \
+      -f ./helm_values/values-bookinfo-${ENV_NAME}-ratings.yaml \
+      --set extraEnv.COMMIT_ID=${scmVars.GIT_COMMIT} \
+      --wait --namespace bookinfo-${ENV_NAME} \
+      bookinfo-ratings-${ENV_NAME} ./helm
