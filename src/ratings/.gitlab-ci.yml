@@ -100,7 +100,6 @@ Deploy-job:
   identity: google_cloud
   script:
     - cd src/ratings
-    - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
     - gcloud container clusters get-credentials bookinfo --zone asia-southeast1 --project gifted-airport-481410-e7
     - |
       helm upgrade --install \
