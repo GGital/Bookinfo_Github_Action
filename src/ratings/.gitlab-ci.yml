@@ -91,7 +91,7 @@ Trivy-check:
     when: always
     paths:
       - trivy-results/trivy-report.html
-
+# Auth using integration of google IAM
 Deploy-job:
   stage: deploy
   image:
