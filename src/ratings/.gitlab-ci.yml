@@ -95,14 +95,12 @@ Trivy-check:
 Deploy-job:
   stage: deploy
   image:
-    name: lachlanevenson/k8s-helm:v3.5.0
+    name: google/cloud-sdk:slim
     entrypoint: [""]
   identity: google_cloud
   script:
     - cd src/ratings
-    - apk add --no-cache python3 curl bash
-    - curl https://sdk.cloud.google.com | bash > /dev/null
-    - export PATH=$PATH:/root/google-cloud-sdk/bin
+    - curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
     - gcloud container clusters get-credentials bookinfo --zone asia-southeast1 --project gifted-airport-481410-e7
     - |
       helm upgrade --install \
