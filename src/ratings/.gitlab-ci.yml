@@ -99,9 +99,7 @@ Deploy-job:
     entrypoint: [""]
   identity: google_cloud
   variables:
-    # Use your ACTUAL Service Account email here
-    GCP_SERVICE_ACCOUNT: "jenkins-admin@gifted-airport-481410-e7.iam.gserviceaccount.com"
-    # Use the PROVIDER path from your manual setup
+    GCP_SERVICE_ACCOUNT: "jenkins-deployer@gifted-airport-481410-e7.iam.gserviceaccount.com"
     WIF_PROVIDER: "projects/190851359876/locations/global/workloadIdentityPools/bookinfo-gitlab-pool/providers/bookinfo-gitlab"
   script:
     - cd src/ratings
