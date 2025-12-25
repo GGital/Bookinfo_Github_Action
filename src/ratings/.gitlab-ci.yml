@@ -24,8 +24,8 @@ KICS-job:
   image: checkmarx/kics:latest
   script:
     - cd src/ratings
-    - mkdir -p kics-results
-    - kics scan -p . --report-formats html --output-path kics-results/ --output-name scan-report --ignore-on-exit results
+    - sh 'mkdir -p kics-results'
+    - sh 'kics scan -p . --report-formats html --output-path kics-results/ --output-name scan-report --ignore-on-exit results'
   artifacts:
     untracked: false
     when: on_success
@@ -36,7 +36,7 @@ KICS-job:
 
 Sonarqube-job:
   stage: prepare&security
-  image: timbru31/java-node:11-alpine-jre-20
+  image: sonarsource/sonar-scanner-cli:latest
   script:
     - cd src/ratings
     - sonar-scanner
