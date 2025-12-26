@@ -40,7 +40,7 @@ trigger-reviews:
 
 trigger-tagging:
   trigger:
-    include: src/tagging-pipeline/.gitlab-ci.yml
+    include: ./tagging-pipeline/.gitlab-ci.yml
     strategy: depend
   rules:
     - if: $TRIGGER_ACTION == "tagging"
@@ -49,7 +49,7 @@ trigger-tagging:
 
 trigger-deploy-prd:
   trigger:
-    include: src/prd-pipeline/.gitlab-ci.yml
+    include: ./prd-pipeline/.gitlab-ci.yml
     strategy: depend
   rules:
     - if: $TRIGGER_ACTION == "deploy-prd"
