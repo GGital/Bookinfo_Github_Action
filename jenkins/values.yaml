@@ -3,6 +3,21 @@ controller:
   serviceType: NodePort
   healthCheckPath: "/login"
   
+  javaOpts: "-Dhudson.security.csrf.DefaultCrumbIssuer.EXCLUDE_SESSION_ID=true"
+  
+  # 2. Add an Init Script to enable Proxy Compatibility
+  initScripts:
+    - |
+      import jenkins.model.Jenkins
+      import hudson.security.csrf.DefaultCrumbIssuer
+
+      def instance = Jenkins.instance
+      if (instance.getCrumbIssuer() == null) {
+          instance.setCrumbIssuer(new DefaultCrumbIssuer(true)) // 'true' enables proxy compatibility
+          instance.save()
+          println "CSRF Proxy Compatibility Enabled"
+      }
+
   # 2. External URL Setup
   jenkinsUrl: "https://cicd-gital.opsta.in.th/"
   jenkinsUrlProtocol: "https"
