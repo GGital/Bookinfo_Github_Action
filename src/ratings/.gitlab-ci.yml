@@ -97,24 +97,10 @@ Deploy-job:
   image:
     name: kiwigrid/gcloud-kubectl-helm:latest
     entrypoint: [""]
-  identity: google_cloud
-  variables:
-    GCP_SERVICE_ACCOUNT: "jenkins-deployer@gifted-airport-481410-e7.iam.gserviceaccount.com"
-    WIF_PROVIDER: "projects/190851359876/locations/global/workloadIdentityPools/bookinfo-gitlab-pool/providers/bookinfo-gitlab"
   script:
     - cd src/ratings
-    # 1. Check which identity is active
-    - echo ${CI_JOB_JWT_V2} > .ci_job_jwt_file
-    - gcloud iam workload-identity-pools create-cred-config "${WIF_PROVIDER}"
-      --service-account="${GCP_SERVICE_ACCOUNT}"
-      --output-file=.gcp_temp_cred.json
-      --credential-source-file=.ci_job_jwt_file
-
-    # Authenticate
-    - gcloud auth login --cred-file=.gcp_temp_cred.json
-    - gcloud config set project gifted-airport-481410-e7
-    # 4. Connect to GKE
-    - gcloud container clusters get-credentials bookinfo --region asia-southeast1 --project gifted-airport-481410-e7
+    - kubectl config use-context ggital-group/bookinfo:gitlab-agent
+    - kubectl get pods
     - |
       helm upgrade --install \
         bookinfo-ratings-${ENV_NAME} \
