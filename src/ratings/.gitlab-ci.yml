@@ -34,6 +34,7 @@ KICS-job:
     when: always
     paths:
       - src/ratings/kics-results/scan-report.html
+    expose_as: "KICS Report"
     expire_in: "30 days"
 
 Sonarqube-job:
@@ -80,7 +81,8 @@ owasp-dependency-check:
     name: "dependency-check-results"
     when: always
     paths:
-      - reports/dependency-check/
+      - reports/dependency-check/dependency-check-report.html
+    expose_as: dependency-check-report
     expire_in: 1 week
 
 build-job:
@@ -122,6 +124,7 @@ Trivy-check:
     when: always
     paths:
       - trivy-results/trivy-report.html
+    expose_as: "trivy-report"
 # Auth using integration of google IAM
 Deploy-job:
   stage: deploy
@@ -149,11 +152,10 @@ dast-zap-baseline:
     # Use your environment variable or a GitLab CI variable
     TARGET_URL: "https://bookinfo-gital-${ENV_NAME}.opsta.in.th/"
   script:
-    - export ZAP_OUT_DIR=$(pwd)
+    - ln -s \$(pwd) /zap/wrk
     - |
       zap-baseline.py -t $TARGET_URL \
-        -r zap-report.html \
-        --OUT_DIR $ZAP_OUT_DIR || \
+       -r zap-report.html \
         if [ $? -eq 2 ]; then echo "Warnings found, but proceeding..."; exit 0; else exit 1; fi
     - ls -lh zap-report.html
   artifacts:
