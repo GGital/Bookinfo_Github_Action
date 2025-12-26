@@ -152,11 +152,18 @@ dast-zap-baseline:
     # Use your environment variable or a GitLab CI variable
     TARGET_URL: "https://bookinfo-gital-${ENV_NAME}.opsta.in.th/"
   script:
-    - ln -s \$(pwd) /zap/wrk
+    - ln -s "$(pwd)" /zap/wrk
     - |
-      zap-baseline.py -t $TARGET_URL \
-       -r zap-report.html \
-        if [ $? -eq 2 ]; then echo "Warnings found, but proceeding..."; exit 0; else exit 1; fi
+      zap-baseline.py -t "$TARGET_URL" -r zap-report.html || {
+        EXIT_CODE=$?
+        if [ $EXIT_CODE -eq 2 ]; then
+          echo "Warnings found (Exit 2), but proceeding..."
+          exit 0
+        else
+          echo "ZAP failed with critical error (Exit $EXIT_CODE)"
+          exit $EXIT_CODE
+        fi
+      }
     - ls -lh zap-report.html
   artifacts:
     name: "zap-dast-report"
