@@ -54,13 +54,10 @@ Sonarqube-job:
       - .sonar/cache
 
 owasp-dependency-check:
-  stage: security
+  stage: prepare&security
   image:
     name: owasp/dependency-check:latest
     entrypoint: [""]
-  rules:
-    - changes:
-        - src/ratings/**/*
   cache:
     key: "dependency-check-db"
     paths:
