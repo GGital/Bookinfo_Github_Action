@@ -18,6 +18,7 @@ stages:
 variables:
   PROJECT_KEY: "bookinfo:ratings"
   PROJECT_NAME: "bookinfo:ratings"
+  DC_DIRECTORY: "$CI_PROJECT_DIR/dependency-check-data"
 
 KICS-job:
   stage: prepare&security
@@ -51,6 +52,35 @@ Sonarqube-job:
     key: "${CI_JOB_NAME}"
     paths:
       - .sonar/cache
+
+owasp-dependency-check:
+  stage: security
+  image:
+    name: owasp/dependency-check:latest
+    entrypoint: [""]
+  rules:
+    - changes:
+        - src/ratings/**/*
+  cache:
+    key: "dependency-check-db"
+    paths:
+      - $DC_DIRECTORY
+  script:
+    - mkdir -p $DC_DIRECTORY
+
+    - /usr/share/dependency-check/bin/dependency-check.sh \
+      --project "Ratings Service" \
+      --scan "src/ratings" \
+      --out "src/ratings" \
+      --format "HTML" \
+      --format "XML" \
+      --data "$DC_DIRECTORY" \
+      --nodeAuditSkip
+  artifacts:
+    paths:
+      - src/ratings/dependency-check-report.html
+      - src/ratings/dependency-check-report.xml
+    expire_in: 1 week
 
 build-job:
   stage: build
@@ -109,3 +139,25 @@ Deploy-job:
         --set extraEnv.COMMIT_ID=$CI_COMMIT_SHA \
         --wait \
         --namespace bookinfo-${ENV_NAME}
+dast-zap-baseline:
+  stage: DAST
+  image:
+    name: ghcr.io/zaproxy/zaproxy:stable
+    entrypoint: [""]
+  variables:
+    # Use your environment variable or a GitLab CI variable
+    TARGET_URL: "https://bookinfo-gital-${ENV_NAME}.opsta.in.th/"
+  script:
+    - mkdir -p /zap/wrk
+    - ln -s $(pwd) /zap/wrk
+
+    - |
+      zap-baseline.py -t $TARGET_URL \
+        -r zap-report.html || \
+        if [ $? -eq 2 ]; then echo "Warnings found, but proceeding..."; exit 0; else exit 1; fi
+  artifacts:
+    name: "zap-dast-report"
+    when: always
+    paths:
+      - zap-report.html
+    expose_as: "OWASP ZAP DAST Report"
