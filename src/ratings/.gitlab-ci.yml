@@ -114,7 +114,7 @@ Deploy-job:
     - gcloud auth login --cred-file=.gcp_temp_cred.json
     - gcloud config set project gifted-airport-481410-e7
     # 4. Connect to GKE
-    - gcloud container clusters get-credentials bookinfo --zone asia-southeast1 --project gifted-airport-481410-e7
+    - gcloud container clusters get-credentials bookinfo --region asia-southeast1 --project gifted-airport-481410-e7
     - |
       helm upgrade --install \
         bookinfo-ratings-${ENV_NAME} \
