@@ -76,7 +76,7 @@ spec:
                             sshagent(credentials: ['bookinfo-git-deploy-key']) {
                                 sh """
                                 # Git tag first
-                                git tag build-${scmVars.GIT_COMMIT.take(7)}
+                                git tag -f build-${scmVars.GIT_COMMIT.take(7)}
                                 # Push tag back to Gitlab
                                 SSH_AUTH_SOCK=${SSH_AUTH_SOCK} \
                                 GIT_SSH_COMMAND="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" \

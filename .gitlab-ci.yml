@@ -1,0 +1,57 @@
+trigger-ratings:
+  trigger:
+    include: src/ratings/.gitlab-ci.yml
+    strategy: depend
+  rules:
+    - if: $TRIGGER_ACTION == "tagging" || $TRIGGER_ACTION == "deploy-prd"
+      when: never
+    - changes:
+        - src/ratings/**/*
+
+trigger-details:
+  trigger:
+    include: src/details/.gitlab-ci.yml
+    strategy: depend
+  rules:
+    - if: $TRIGGER_ACTION == "tagging" || $TRIGGER_ACTION == "deploy-prd"
+      when: never
+    - changes:
+        - src/details/**/*
+
+trigger-productpage:
+  trigger:
+    include: src/productpage/.gitlab-ci.yml
+    strategy: depend
+  rules:
+    - if: $TRIGGER_ACTION == "tagging" || $TRIGGER_ACTION == "deploy-prd"
+      when: never
+    - changes:
+        - src/productpage/**/*
+
+trigger-reviews:
+  trigger:
+    include: src/reviews/.gitlab-ci.yml
+    strategy: depend
+  rules:
+    - if: $TRIGGER_ACTION == "tagging" || $TRIGGER_ACTION == "deploy-prd"
+      when: never
+    - changes:
+        - src/reviews/**/*
+
+trigger-tagging:
+  trigger:
+    include: TaggingPipeline/.gitlab-ci.yml
+    strategy: depend
+  rules:
+    - if: $TRIGGER_ACTION == "tagging"
+      when: always
+    - when: never
+
+trigger-deploy-prd:
+  trigger:
+    include: PrdPipeline/.gitlab-ci.yml
+    strategy: depend
+  rules:
+    - if: $TRIGGER_ACTION == "deploy-prd"
+      when: always
+    - when: never
