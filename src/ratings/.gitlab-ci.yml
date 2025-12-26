@@ -67,13 +67,15 @@ owasp-dependency-check:
     - mkdir -p $DC_DATA_DIR
     - mkdir -p reports/dependency-check
     - |
-      /usr/share/dependency-check/bin/dependency-check.sh
-      --scan "src/ratings"
-      --out "reports/dependency-check"
-      --format "HTML"
-      --format "XML"
-      --data "$DC_DATA_DIR"
-      --nodeAuditSkip
+      /usr/share/dependency-check/bin/dependency-check.sh \
+        --project "Ratings Service" \
+        --scan "src/ratings" \
+        --out "reports/dependency-check" \
+        --format "HTML" \
+        --format "XML" \
+        --data "$DC_DATA_DIR" \
+        --nodeAuditSkip
+    - ls -lh reports/dependency-check/
   artifacts:
     name: "dependency-check-results"
     when: always
