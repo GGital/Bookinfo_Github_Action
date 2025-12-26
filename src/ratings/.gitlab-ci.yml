@@ -19,6 +19,7 @@ variables:
   PROJECT_KEY: "bookinfo:ratings"
   PROJECT_NAME: "bookinfo:ratings"
   DC_DIRECTORY: "$CI_PROJECT_DIR/dependency-check-data"
+  DC_DATA_DIR: "$CI_PROJECT_DIR/dependency-check-data"
 
 KICS-job:
   stage: prepare&security
