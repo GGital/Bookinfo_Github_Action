@@ -16,6 +16,10 @@ Tagging-Docker:
     REGISTRY_NAME: "registry-gital.opsta.in.th/bookinfo"
   script:
     - echo "$REGISTRY_PASSWORD" | docker login $REGISTRY_URL -u $REGISTRY_USER --password-stdin
+    - docker pull $REGISTRY_NAME/ratings:uat
+    - docker pull $REGISTRY_NAME/details:uat
+    - docker pull $REGISTRY_NAME/reviews:uat
+    - docker pull $REGISTRY_NAME/productpage:uat
     - docker tag $REGISTRY_NAME/ratings:uat $REGISTRY_NAME/ratings:build-${CI_COMMIT_SHORT_SHA}
     - docker tag $REGISTRY_NAME/details:uat $REGISTRY_NAME/details:build-${CI_COMMIT_SHORT_SHA}
     - docker tag $REGISTRY_NAME/reviews:uat $REGISTRY_NAME/reviews:build-${CI_COMMIT_SHORT_SHA}
