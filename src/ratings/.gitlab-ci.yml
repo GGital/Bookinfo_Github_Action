@@ -63,20 +63,22 @@ owasp-dependency-check:
     paths:
       - $DC_DIRECTORY
   script:
-    - mkdir -p $DC_DIRECTORY
-
-    - /usr/share/dependency-check/bin/dependency-check.sh \
-      --project "Ratings Service" \
-      --scan "src/ratings" \
-      --out "src/ratings" \
-      --format "HTML" \
-      --format "XML" \
-      --data "$DC_DIRECTORY" \
+    - mkdir -p $DC_DATA_DIR
+    - mkdir -p reports/dependency-check
+    - |
+      /usr/share/dependency-check/bin/dependency-check.sh
+      --project "Ratings Service"
+      --scan "src/ratings"
+      --out "reports/dependency-check"
+      --format "HTML"
+      --format "XML"
+      --data "$DC_DATA_DIR"
       --nodeAuditSkip
   artifacts:
+    name: "dependency-check-results"
+    when: always
     paths:
-      - src/ratings/dependency-check-report.html
-      - src/ratings/dependency-check-report.xml
+      - reports/dependency-check/
     expire_in: 1 week
 
 build-job:
@@ -145,13 +147,13 @@ dast-zap-baseline:
     # Use your environment variable or a GitLab CI variable
     TARGET_URL: "https://bookinfo-gital-${ENV_NAME}.opsta.in.th/"
   script:
-    - mkdir -p /zap/wrk
-    - ln -s $(pwd) /zap/wrk
-
+    - export ZAP_OUT_DIR=$(pwd)
     - |
       zap-baseline.py -t $TARGET_URL \
-        -r zap-report.html || \
+        -r zap-report.html \
+        --OUT_DIR $ZAP_OUT_DIR || \
         if [ $? -eq 2 ]; then echo "Warnings found, but proceeding..."; exit 0; else exit 1; fi
+    - ls -lh zap-report.html
   artifacts:
     name: "zap-dast-report"
     when: always
