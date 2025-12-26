@@ -45,8 +45,9 @@ Sonarqube-job:
     - sonar-scanner
       -Dsonar.projectKey=${PROJECT_KEY}
       -Dsonar.projectName=${PROJECT_NAME}
-      -Dsonar.sources=./src
+      -Dsonar.sources=src/main
       -Dsonar.host.url=${SONAR_HOST_URL}
+      -D sonar.java.binaries=bin/main/application
       -Dsonar.token=${SONAR_TOKEN}
       -Dsonar.qualitygate.wait=true
       -Dsonar.qualitygate.timeout=60
