@@ -1,0 +1,46 @@
+stages:
+  - deploy
+
+deploy-prd:
+  stage: deploy
+  image:
+    name: kiwigrid/gcloud-kubectl-helm:latest
+    entrypoint: [""]
+  script:
+    - kubectl config use-context ggital-group/bookinfo:gitlab-agent
+    - |
+      helm upgrade --install \
+        bookinfo-ratings-prd \
+        .src/ratings/helm \
+        -f .src/ratings/helm_values/values-bookinfo-prd-ratings.yaml \
+        --set extraEnv.COMMIT_ID=$CI_COMMIT_SHA \
+        --set ratings.tag=$CI_COMMIT_TAG \
+        --wait \
+        --namespace bookinfo-${ENV_NAME}
+    - |
+      helm upgrade --install \
+        bookinfo-details-prd \
+        .src/details/helm \
+        -f .src/details/helm_values/values-bookinfo-prd-details.yaml \
+        --set extraEnv.COMMIT_ID=$CI_COMMIT_SHA \
+        --set details.tag=$CI_COMMIT_TAG \
+        --wait \
+        --namespace bookinfo-${ENV_NAME}
+    - |
+      helm upgrade --install \
+        bookinfo-productpage-prd \
+        .src/productpage/helm \
+        -f .src/productpage/helm_values/values-bookinfo-prd-productpage.yaml \
+        --set extraEnv.COMMIT_ID=$CI_COMMIT_SHA \
+        --set productpage.tag=$CI_COMMIT_TAG \
+        --wait \
+        --namespace bookinfo-${ENV_NAME}
+    - |
+      helm upgrade --install \
+        bookinfo-reviews-prd \
+        .src/reviews/helm \
+        -f .src/reviews/helm_values/values-bookinfo-prd-reviews.yaml \
+        --set extraEnv.COMMIT_ID=$CI_COMMIT_SHA \
+        --set reviews.tag=$CI_COMMIT_TAG \
+        --wait \
+        --namespace bookinfo-${ENV_NAME}
