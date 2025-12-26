@@ -64,7 +64,7 @@ spec:
     }
 
     stages{
-        // Stage to clone the source code
+        // Stage to clone the source code eiei
         stage('Clone ratings source code') { 
             when {
                 changeset "src/ratings/**"
