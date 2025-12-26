@@ -68,7 +68,6 @@ owasp-dependency-check:
     - mkdir -p reports/dependency-check
     - |
       /usr/share/dependency-check/bin/dependency-check.sh
-      --project "Ratings Service"
       --scan "src/ratings"
       --out "reports/dependency-check"
       --format "HTML"
