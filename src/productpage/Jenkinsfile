@@ -164,7 +164,7 @@ spec:
                             // Install application dependencies
                             sh 'pip install --no-cache-dir --progress-bar off -r requirements.txt'
                             
-                            // Run dependency Check
+                            // Run dependency Checks
                             dependencyCheck(
                                 additionalArguments: "--data /home/jenkins/dependency-check-data --out dependency-check-report.xml",
                                 odcInstallation: "dependency-check"
