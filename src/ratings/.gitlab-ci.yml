@@ -1,0 +1,173 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "main"
+      variables:
+        ENV_NAME: "uat"
+
+    - if: $CI_COMMIT_BRANCH
+      variables:
+        ENV_NAME: $CI_COMMIT_BRANCH
+
+stages:
+  - prepare&security
+  - build
+  - Image-Security
+  - deploy
+  - DAST
+
+variables:
+  PROJECT_KEY: "bookinfo:ratings"
+  PROJECT_NAME: "bookinfo:ratings"
+  DC_DIRECTORY: "$CI_PROJECT_DIR/dependency-check-data"
+  DC_DATA_DIR: "$CI_PROJECT_DIR/dependency-check-data"
+
+KICS-job:
+  stage: prepare&security
+  image:
+    name: checkmarx/kics:latest
+    entrypoint: [""]
+  script:
+    - cd src/ratings
+    - mkdir -p kics-results
+    - kics scan -p . --report-formats html --output-path kics-results/ --output-name scan-report --ignore-on-exit results
+  artifacts:
+    when: always
+    paths:
+      - src/ratings/kics-results/scan-report.html
+    expose_as: "KICS Report"
+    expire_in: "30 days"
+
+Sonarqube-job:
+  stage: prepare&security
+  image: sonarsource/sonar-scanner-cli:latest
+  script:
+    - cd src/ratings
+    - sonar-scanner
+      -Dsonar.projectKey=${PROJECT_KEY}
+      -Dsonar.projectName=${PROJECT_NAME}
+      -Dsonar.sources=./src
+      -Dsonar.host.url=${SONAR_HOST_URL}
+      -Dsonar.token=${SONAR_TOKEN}
+      -Dsonar.qualitygate.wait=true
+      -Dsonar.qualitygate.timeout=60
+  cache:
+    key: "${CI_JOB_NAME}"
+    paths:
+      - .sonar/cache
+
+owasp-dependency-check:
+  stage: prepare&security
+  image:
+    name: owasp/dependency-check:latest
+    entrypoint: [""]
+  cache:
+    key: "dependency-check-db"
+    paths:
+      - $DC_DIRECTORY
+  script:
+    - mkdir -p $DC_DATA_DIR
+    - mkdir -p reports/dependency-check
+    - |
+      /usr/share/dependency-check/bin/dependency-check.sh \
+        --project "Ratings Service" \
+        --scan "src/ratings" \
+        --out "reports/dependency-check" \
+        --format "HTML" \
+        --format "XML" \
+        --data "$DC_DATA_DIR" \
+        --nodeAuditSkip
+    - ls -lh reports/dependency-check/
+  artifacts:
+    name: "dependency-check-results"
+    when: always
+    paths:
+      - reports/dependency-check/dependency-check-report.html
+    expose_as: dependency-check-report
+    expire_in: 1 week
+
+build-job:
+  stage: build
+  image: docker:24.0.5
+  services:
+    - name: docker:20.10.3-dind # This matches your Jenkins version
+      alias: docker
+      command:
+        - "--host=unix:///var/run/docker.sock"
+        - "--host=tcp://0.0.0.0:2375"
+        - "--storage-driver=overlay2"
+  variables:
+    IMAGE_NAME: "registry-gital.opsta.in.th/bookinfo/ratings"
+    IMAGE_TAG: "${ENV_NAME}" # Ensure ENV_NAME is defined in your pipeline or as a variable
+  script:
+    - echo "$REGISTRY_PASSWORD" | docker login $REGISTRY_URL -u $REGISTRY_USER --password-stdin
+    - cd src/ratings
+    - docker build -t $IMAGE_NAME:$IMAGE_TAG .
+    - docker push $IMAGE_NAME:$IMAGE_TAG
+
+Trivy-check:
+  stage: Image-Security
+  image:
+    name: aquasec/trivy:latest
+    entrypoint: [""]
+  variables:
+    TRIVY_USERNAME: $REGISTRY_USER
+    TRIVY_PASSWORD: $REGISTRY_PASSWORD
+  script:
+    - mkdir -p trivy-results
+    - trivy image
+      --severity LOW,MEDIUM,HIGH
+      --format template
+      --template "@/contrib/html.tpl"
+      --output trivy-results/trivy-report.html
+      registry-gital.opsta.in.th/bookinfo/ratings:${ENV_NAME}
+  artifacts:
+    when: always
+    paths:
+      - trivy-results/trivy-report.html
+    expose_as: "trivy-report"
+# Auth using integration of google IAM
+Deploy-job:
+  stage: deploy
+  image:
+    name: kiwigrid/gcloud-kubectl-helm:latest
+    entrypoint: [""]
+  script:
+    - cd src/ratings
+    - kubectl config use-context ggital-group/bookinfo:gitlab-agent
+    - kubectl get pods
+    - |
+      helm upgrade --install \
+        bookinfo-ratings-${ENV_NAME} \
+        ./helm \
+        -f ./helm_values/values-bookinfo-${ENV_NAME}-ratings.yaml \
+        --set extraEnv.COMMIT_ID=$CI_COMMIT_SHA \
+        --wait \
+        --namespace bookinfo-${ENV_NAME}
+dast-zap-baseline:
+  stage: DAST
+  image:
+    name: ghcr.io/zaproxy/zaproxy:stable
+    entrypoint: [""]
+  variables:
+    # Use your environment variable or a GitLab CI variable
+    TARGET_URL: "https://bookinfo-gital-${ENV_NAME}.opsta.in.th/"
+  script:
+    - ln -s "$(pwd)" /zap/wrk
+    - |
+      zap-baseline.py -t "$TARGET_URL" -r zap-report.html || {
+        EXIT_CODE=$?
+        if [ $EXIT_CODE -eq 2 ]; then
+          echo "Warnings found (Exit 2), but proceeding..."
+          exit 0
+        else
+          echo "ZAP failed with critical error (Exit $EXIT_CODE)"
+          exit $EXIT_CODE
+        fi
+      }
+    - ls -lh zap-report.html
+  artifacts:
+    name: "zap-dast-report"
+    when: always
+    paths:
+      - zap-report.html
+    expose_as: "OWASP ZAP DAST Report"

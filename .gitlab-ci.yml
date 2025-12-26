@@ -1,0 +1,31 @@
+trigger-ratings:
+  trigger:
+    include: src/ratings/.gitlab-ci.yml
+    strategy: depend
+  rules:
+    - changes:
+        - src/ratings/**/*
+
+trigger-details:
+  trigger:
+    include: src/details/.gitlab-ci.yml
+    strategy: depend
+  rules:
+    - changes:
+        - src/details/**/*
+
+trigger-productpage:
+  trigger:
+    include: src/productpage/.gitlab-ci.yml
+    strategy: depend
+  rules:
+    - changes:
+        - src/productpage/**/*
+
+trigger-reviews:
+  trigger:
+    include: src/reviews/.gitlab-ci.yml
+    strategy: depend
+  rules:
+    - changes:
+        - src/reviews/**/*
