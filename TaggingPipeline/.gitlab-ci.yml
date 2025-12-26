@@ -3,7 +3,7 @@ stages:
   - Tagging-Git
 
 Tagging-Docker:
-  stage: Tagging-Docker
+  stage: Tagging-Dockerimage
   image: docker:24.0.5
   services:
     - docker:20.10.3-dind
