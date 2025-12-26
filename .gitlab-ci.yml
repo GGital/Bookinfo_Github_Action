@@ -40,7 +40,7 @@ trigger-reviews:
 
 trigger-tagging:
   trigger:
-    include: src/tagging/.gitlab-ci.yml
+    include: src/tagging-pipeline/.gitlab-ci.yml
     strategy: depend
   rules:
     - if: $TRIGGER_ACTION == "tagging"
