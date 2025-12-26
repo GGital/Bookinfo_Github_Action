@@ -11,8 +11,8 @@ deploy-prd:
     - |
       helm upgrade --install \
         bookinfo-ratings-prd \
-        .src/ratings/helm \
-        -f .src/ratings/helm_values/values-bookinfo-prd-ratings.yaml \
+        src/ratings/helm \
+        -f src/ratings/helm_values/values-bookinfo-prd-ratings.yaml \
         --set extraEnv.COMMIT_ID=$CI_COMMIT_SHA \
         --set ratings.tag=$CI_COMMIT_TAG \
         --wait \
@@ -20,8 +20,8 @@ deploy-prd:
     - |
       helm upgrade --install \
         bookinfo-details-prd \
-        .src/details/helm \
-        -f .src/details/helm_values/values-bookinfo-prd-details.yaml \
+        src/details/helm \
+        -f src/details/helm_values/values-bookinfo-prd-details.yaml \
         --set extraEnv.COMMIT_ID=$CI_COMMIT_SHA \
         --set details.tag=$CI_COMMIT_TAG \
         --wait \
@@ -29,8 +29,8 @@ deploy-prd:
     - |
       helm upgrade --install \
         bookinfo-productpage-prd \
-        .src/productpage/helm \
-        -f .src/productpage/helm_values/values-bookinfo-prd-productpage.yaml \
+        src/productpage/helm \
+        -f src/productpage/helm_values/values-bookinfo-prd-productpage.yaml \
         --set extraEnv.COMMIT_ID=$CI_COMMIT_SHA \
         --set productpage.tag=$CI_COMMIT_TAG \
         --wait \
@@ -38,8 +38,8 @@ deploy-prd:
     - |
       helm upgrade --install \
         bookinfo-reviews-prd \
-        .src/reviews/helm \
-        -f .src/reviews/helm_values/values-bookinfo-prd-reviews.yaml \
+        src/reviews/helm \
+        -f src/reviews/helm_values/values-bookinfo-prd-reviews.yaml \
         --set extraEnv.COMMIT_ID=$CI_COMMIT_SHA \
         --set reviews.tag=$CI_COMMIT_TAG \
         --wait \
