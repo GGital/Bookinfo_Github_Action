@@ -170,11 +170,10 @@ jobs:
                   target: "https://bookinfo-gital-${{ env.ENV_NAME }}.opsta.in.th/"
                   artifact_name: "zap-report"
                   fail_action: false
-                  cmd_options: "-r zap-report.html"
 
             - name: Upload ZAP Report
               if: always()
               uses: actions/upload-artifact@v4
               with:
-                  name: OWASP-ZAP-Report
-                  path: zap-report.html
+                  name: zap-report
+                  path: report_html.html
