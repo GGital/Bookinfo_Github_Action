@@ -1,8 +1,8 @@
-name: Deploy Ratings Service
+name: Deploy Details Service
 on: [push]
 env:
-    PROJECT_KEY: "bookinfo:ratings"
-    PROJECT_NAME: "bookinfo:ratings"
+    PROJECT_KEY: "bookinfo:details"
+    PROJECT_NAME: "bookinfo:details"
     DC_DIRECTORY: "${{ github.workspace }}/dependency-check-data"
     DC_DATA_DIR: "${{ github.workspace }}/dependency-check-data"
     ENV_NAME: ${{ github.ref_name == 'main' && 'uat' || 'dev' }}
@@ -17,7 +17,7 @@ jobs:
             - name: Run KICS Scan
               uses: checkmarx/kics-github-action@master
               with:
-                  path: src/ratings
+                  path: src/details
                   output_path: kics-results
                   output_formats: html
                   ignore_on_exit: results
@@ -45,7 +45,7 @@ jobs:
                   args: >
                       -Dsonar.projectKey=${{ env.PROJECT_KEY }}
                       -Dsonar.projectName=${{ env.PROJECT_NAME }}
-                      -Dsonar.sources=./src/ratings
+                      -Dsonar.sources=./src/details
                       -Dsonar.qualitygate.wait=true
                       -Dsonar.qualitygate.timeout=60
             - name: SonarQube Quality Gate
@@ -64,8 +64,8 @@ jobs:
             - name: Running OWASP Dependency Check
               uses: dependency-check/Dependency-Check_Action@main
               with:
-                  project: "bookinfo-ratings"
-                  path: "src/ratings"
+                  project: "bookinfo-details"
+                  path: "src/details"
                   format: "HTML"
                   args: >
                       --enableExperimental
@@ -82,7 +82,7 @@ jobs:
         permissions:
             contents: read
         env:
-            IMAGE_NAME: "registry-gital.opsta.in.th/bookinfo/ratings"
+            IMAGE_NAME: "registry-gital.opsta.in.th/bookinfo/details"
 
         steps:
             - uses: actions/checkout@v4
@@ -96,7 +96,7 @@ jobs:
             - name: Build and push
               uses: docker/build-push-action@v5
               with:
-                  context: src/ratings
+                  context: src/details
                   push: true
                   tags: ${{ env.IMAGE_NAME }}:${{ env.ENV_NAME }}
     trivy-check:
@@ -112,7 +112,7 @@ jobs:
             - name: Run Trivy Scan
               uses: aquasecurity/trivy-action@master
               with:
-                  image-ref: "registry-gital.opsta.in.th/bookinfo/ratings:${{ env.ENV_NAME }}"
+                  image-ref: "registry-gital.opsta.in.th/bookinfo/details:${{ env.ENV_NAME }}"
                   format: "template"
                   template: "./trivy-templates/html.tpl"
                   output: "trivy-results/trivy-report.html"
@@ -147,9 +147,9 @@ jobs:
             - name: Deploy with Helm
               run: |
                   helm upgrade --install \
-                  bookinfo-ratings-${{ env.ENV_NAME }} \
-                  ./src/ratings/helm \
-                  -f ./src/ratings/helm_values/values-bookinfo-${{ env.ENV_NAME }}-ratings.yaml \
+                  bookinfo-details-${{ env.ENV_NAME }} \
+                  ./src/details/helm \
+                  -f ./src/details/helm_values/values-bookinfo-${{ env.ENV_NAME }}-details.yaml \
                   --set extraEnv.COMMIT_ID=${{ github.sha }} \
                   --wait \
                   --namespace bookinfo-${{ env.ENV_NAME }} \
