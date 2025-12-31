@@ -139,16 +139,21 @@ jobs:
             # No need to "use-context" if ARC is in the same cluster!
             # The runner automatically uses its own Service Account.
 
-            - name: Deploy with Helm
-              uses: deliverybot/helm@v1
+            - name: Setup Helm
+              uses: azure/setup-helm@v3
               with:
-                  release: bookinfo-ratings-${{ env.ENV_NAME }}
-                  namespace: bookinfo-${{ env.ENV_NAME }}
-                  chart: ./src/ratings/helm
-                  values: ./src/ratings/helm_values/values-bookinfo-${{ env.ENV_NAME }}-ratings.yaml
-                  value-files: ./src/ratings/helm_values/values-bookinfo-${{ env.ENV_NAME }}-ratings.yaml
-              env:
-                  HELM_UPGRADE_EXTRA_ARGS: "--set extraEnv.COMMIT_ID=${{ github.sha }} --wait --create-namespace"
+                  version: "latest"
+
+            - name: Deploy with Helm
+              run: |
+                  helm upgrade --install \
+                  bookinfo-ratings-${{ env.ENV_NAME }} \
+                  ./src/ratings/helm \
+                  -f ./src/ratings/helm_values/values-bookinfo-${{ env.ENV_NAME }}-ratings.yaml \
+                  --set extraEnv.COMMIT_ID=${{ github.sha }} \
+                  --wait \
+                  --namespace bookinfo-${{ env.ENV_NAME }} \
+                  --create-namespace
 
     dast-zap-baseline:
         needs: deploy
