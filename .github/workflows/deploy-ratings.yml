@@ -12,49 +12,48 @@ jobs:
         runs-on: arc-runner-set
         permissions:
             contents: read
-        container:
-            image: checkmarx/kics:latest
         steps:
             - uses: actions/checkout@v4
-            - name: Running KICS Scan
-              run: |
-                  cd src/ratings
-                  mkdir -p kics-results
-                  kics scan -p . --report-formats html --output-path kics-results/ --output-name scan-report --ignore-on-exit results
+            - name: Run KICS Scan
+              uses: checkmarx/kics-github-action@master
+              with:
+                  path: src/ratings
+                  output_path: kics-results
+                  output_formats: html
+                  ignore_on_exit: results
             - name: Upload KICS Report
               uses: actions/upload-artifact@v4
+              if: always()
               with:
                   name: KICS Report
-                  path: src/ratings/kics-results/scan-report.html
+                  path: kics-results
 
     Sonarqube-job:
         runs-on: arc-runner-set
         permissions:
             contents: read
-        container:
-            image: sonarsource/sonar-scanner-cli:latest
         steps:
             - uses: actions/checkout@v4
-            - name: Running SonarQube Scan
+              with:
+                  fetch-depth: 0
+            - name: SonarQube Scan
+              uses: SonarSource/sonarqube-scan-action@master
               env:
                   SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
                   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-              run: |
-                  cd src/ratings
-                  sonar-scanner \
-                    -Dsonar.projectKey=${{ env.PROJECT_KEY }} \
-                    -Dsonar.projectName=${{ env.PROJECT_NAME }} \
-                    -Dsonar.sources=./src \
-                    -Dsonar.host.url=${{ env.SONAR_HOST_URL }} \
-                    -Dsonar.token=${{ env.SONAR_TOKEN }} \
-                    -Dsonar.qualitygate.wait=true \
-                    -Dsonar.qualitygate.timeout=60
-            - name: Cache SonarQube Data
-              uses: actions/cache@v3
               with:
-                  path: ~/.sonar/cache
-                  key: ${{ runner.os }}-sonar
-                  restore-keys: ${{ runner.os }}-sonar
+                  projectBaseDir: src/ratings
+                  args: >
+                      -Dsonar.projectKey=${{ env.PROJECT_KEY }}
+                      -Dsonar.projectName=${{ env.PROJECT_NAME }}
+                      -Dsonar.qualitygate.wait=true
+                      -Dsonar.qualitygate.timeout=60
+            - name: SonarQube Quality Gate
+              uses: SonarSource/sonarqube-quality-gate-action@master
+              if: always()
+              env:
+                  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+                  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
 
     owasp-dependency-check:
         runs-on: arc-runner-set
@@ -76,7 +75,7 @@ jobs:
               if: always()
               with:
                   name: OWASP Dependency Check Report
-                  path: dependency-check-report.html
+                  path: ${{github.workspace}}/reports
     build-job:
         needs: [KICS-job, Sonarqube-job, owasp-dependency-check]
         runs-on: arc-runner-set
