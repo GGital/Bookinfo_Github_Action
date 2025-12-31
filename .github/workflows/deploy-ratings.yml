@@ -10,6 +10,8 @@ env:
 jobs:
     KICS-job:
         runs-on: arc-runner-set
+        permissions:
+            contents: read
         container:
             image: checkmarx/kics:latest
         steps:
@@ -20,13 +22,15 @@ jobs:
                   mkdir -p kics-results
                   kics scan -p . --report-formats html --output-path kics-results/ --output-name scan-report --ignore-on-exit results
             - name: Upload KICS Report
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
               with:
                   name: KICS Report
                   path: src/ratings/kics-results/scan-report.html
 
     Sonarqube-job:
         runs-on: arc-runner-set
+        permissions:
+            contents: read
         container:
             image: sonarsource/sonar-scanner-cli:latest
         steps:
@@ -54,30 +58,30 @@ jobs:
 
     owasp-dependency-check:
         runs-on: arc-runner-set
-        container:
-            image: owasp/dependency-check:latest
+        permissions:
+            contents: read
         steps:
             - uses: actions/checkout@v4
             - name: Running OWASP Dependency Check
-              run: |
-                  mkdir -p $DC_DIRECTORY
-                  mkdir -p reports/dependency-check
-                  dependency-check.sh --project $PROJECT_NAME \
-                    --scan ./src/ratings \
-                    --out "reports/dependency-check" \
-                    --format "HTML" \
-                    --format "XML" \
-                    --data "$DC_DATA_DIR" \
-                    --nodeAuditSkip
-                  ls -lh reports/dependency-check/
+              uses: dependency-check/Dependency-Check_Action@main
+              with:
+                  project: "bookinfo-ratings"
+                  path: "src/ratings"
+                  format: "HTML"
+                  args: >
+                      --enableExperimental
+                      --enableRetired
             - name: Upload OWASP Dependency Check Report
-              uses: actions/upload-artifact@v3
+              uses: actions/upload-artifact@v4
+              if: always()
               with:
                   name: OWASP Dependency Check Report
-                  path: reports/dependency-check/
+                  path: dependency-check-report.html
     build-job:
         needs: [KICS-job, Sonarqube-job, owasp-dependency-check]
         runs-on: arc-runner-set
+        permissions:
+            contents: read
         env:
             IMAGE_NAME: "registry-gital.opsta.in.th/bookinfo/ratings"
 
@@ -100,8 +104,6 @@ jobs:
         needs: build-job
         runs-on: arc-runner-set
         steps:
-            - uses: actions/checkout@v4
-
             - name: Run Trivy Scan
               uses: aquasecurity/trivy-action@master
               with:
@@ -124,6 +126,8 @@ jobs:
     deploy:
         needs: trivy-check
         runs-on: arc-runner-set
+        permissions:
+            contents: read
         steps:
             - uses: actions/checkout@v4
 
