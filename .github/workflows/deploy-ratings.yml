@@ -122,6 +122,7 @@ jobs:
                   path: trivy-results/trivy-report.html
 
     deploy:
+        needs: trivy-check
         runs-on: arc-runner-set
         steps:
             - uses: actions/checkout@v4
