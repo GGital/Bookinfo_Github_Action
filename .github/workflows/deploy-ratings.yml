@@ -103,6 +103,8 @@ jobs:
         needs: build-job
         runs-on: arc-runner-set
         steps:
+            - name: Create trivy-results directory
+              run: mkdir -p trivy-results
             - name: Run Trivy Scan
               uses: aquasecurity/trivy-action@master
               with:
