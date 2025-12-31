@@ -42,10 +42,10 @@ jobs:
                   SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
                   SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
               with:
-                  projectBaseDir: src/ratings
                   args: >
                       -Dsonar.projectKey=${{ env.PROJECT_KEY }}
                       -Dsonar.projectName=${{ env.PROJECT_NAME }}
+                      -Dsonar.sources=./src/ratings
                       -Dsonar.qualitygate.wait=true
                       -Dsonar.qualitygate.timeout=60
             - name: SonarQube Quality Gate
