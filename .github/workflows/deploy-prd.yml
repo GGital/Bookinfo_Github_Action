@@ -50,3 +50,4 @@ jobs:
                         --wait \
                         --namespace bookinfo-prd \
                         --create-namespace
+                    done
