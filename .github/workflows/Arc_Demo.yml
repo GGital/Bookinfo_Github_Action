@@ -1,0 +1,11 @@
+name: ARC Demo
+on: [push]
+
+jobs:
+    build:
+        # This MUST match your Helm installation name
+        runs-on: arc-runner-set
+        steps:
+            - uses: actions/checkout@v4
+            - name: Run a test script
+              run: echo "Hello from a Kubernetes-hosted runner!"

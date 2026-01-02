@@ -1,0 +1,37 @@
+name: Tagging For Production Deployment
+on: [workflow_dispatch]
+
+env:
+    Tag: ${GITHUB_SHA::7}
+
+jobs:
+    tagging-dockerimage:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Logging into registry
+              uses: docker/login-action@v2
+              with:
+                  registry: registry-gital.opsta.in.th
+                  username: ${{ secrets.REGISTRY_USER }}
+                  password: ${{ secrets.REGISTRY_PASSWORD }}
+            - name: Tagging all bookinfo services images to latest
+              run: |
+                  SERVICES=("productpage" "details" "reviews" "ratings")
+                  for SERVICE in "${SERVICES[@]}"; do
+                      docker pull registry-gital.opsta.in.th/bookinfo/$SERVICE:uat
+                      docker tag registry-gital.opsta.in.th/bookinfo/$SERVICE:uat registry-gital.opsta.in.th/bookinfo/$SERVICE:${env.Tag}
+                      docker push registry-gital.opsta.in.th/bookinfo/$SERVICE:${env.Tag}
+                  done
+    tagging-git:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+            - name: Tagging Git with image tag
+              run: |
+                  git config user.email "sakukiheng@gmail.com"
+                  git config user.name "GGital"
+                  TAG_NAME="build-${env.Tag}"
+                  echo "Creating tag $TAG_NAME"
+                  git tag -f $TAG_NAME
+                  git push origin $TAG_NAME -o ci.skip

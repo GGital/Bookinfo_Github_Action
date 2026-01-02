@@ -1,0 +1,175 @@
+name: Deploy Productpage Service
+on:
+    push:
+        paths:
+            - "src/productpage/**"
+env:
+    PROJECT_KEY: "bookinfo:productpage"
+    PROJECT_NAME: "bookinfo:productpage"
+    DC_DIRECTORY: "${{ github.workspace }}/dependency-check-data"
+    DC_DATA_DIR: "${{ github.workspace }}/dependency-check-data"
+    ENV_NAME: ${{ github.ref_name == 'main' && 'uat' || 'dev' }}
+
+jobs:
+    KICS-job:
+        runs-on: arc-runner-set
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v4
+            - name: Run KICS Scan
+              uses: checkmarx/kics-github-action@master
+              with:
+                  path: src/productpage
+                  output_path: kics-results
+                  output_formats: html
+                  ignore_on_exit: results
+            - name: Upload KICS Report
+              uses: actions/upload-artifact@v4
+              if: always()
+              with:
+                  name: KICS Report
+                  path: kics-results
+
+    Sonarqube-job:
+        runs-on: arc-runner-set
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v4
+              with:
+                  fetch-depth: 0
+            - name: SonarQube Scan
+              uses: SonarSource/sonarqube-scan-action@master
+              env:
+                  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+                  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+              with:
+                  args: >
+                      -Dsonar.projectKey=${{ env.PROJECT_KEY }}
+                      -Dsonar.projectName=${{ env.PROJECT_NAME }}
+                      -Dsonar.sources=./src/productpage
+                      -Dsonar.qualitygate.wait=true
+                      -Dsonar.qualitygate.timeout=60
+            - name: SonarQube Quality Gate
+              uses: SonarSource/sonarqube-quality-gate-action@master
+              if: always()
+              env:
+                  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+                  SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}
+
+    owasp-dependency-check:
+        runs-on: arc-runner-set
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v4
+            - name: Running OWASP Dependency Check
+              uses: dependency-check/Dependency-Check_Action@main
+              with:
+                  project: "bookinfo-productpage"
+                  path: "src/productpage"
+                  format: "HTML"
+                  args: >
+                      --enableExperimental
+                      --enableRetired
+            - name: Upload OWASP Dependency Check Report
+              uses: actions/upload-artifact@v4
+              if: always()
+              with:
+                  name: OWASP Dependency Check Report
+                  path: ${{github.workspace}}/reports
+    build-job:
+        needs: [KICS-job, Sonarqube-job, owasp-dependency-check]
+        runs-on: arc-runner-set
+        permissions:
+            contents: read
+        env:
+            IMAGE_NAME: "registry-gital.opsta.in.th/bookinfo/productpage"
+
+        steps:
+            - uses: actions/checkout@v4
+            - name: Log in to Registry
+              uses: docker/login-action@v3
+              with:
+                  registry: registry-gital.opsta.in.th
+                  username: ${{ secrets.REGISTRY_USER }}
+                  password: ${{ secrets.REGISTRY_PASSWORD }}
+
+            - name: Build and push
+              uses: docker/build-push-action@v5
+              with:
+                  context: src/productpage
+                  push: true
+                  tags: ${{ env.IMAGE_NAME }}:${{ env.ENV_NAME }}
+    trivy-check:
+        needs: build-job
+        runs-on: arc-runner-set
+        steps:
+            - name: Create trivy-results directory
+              run: mkdir -p trivy-results
+            - name: Download Trivy HTML Template
+              run: |
+                  mkdir -p trivy-templates
+                  curl -L -o trivy-templates/html.tpl https://raw.githubusercontent.com/aquasecurity/trivy/main/contrib/html.tpl
+            - name: Run Trivy Scan
+              uses: aquasecurity/trivy-action@master
+              with:
+                  image-ref: "registry-gital.opsta.in.th/bookinfo/productpage:${{ env.ENV_NAME }}"
+                  format: "template"
+                  template: "./trivy-templates/html.tpl"
+                  output: "trivy-results/trivy-report.html"
+                  severity: "LOW,MEDIUM,HIGH"
+              env:
+                  TRIVY_USERNAME: ${{ secrets.REGISTRY_USER }}
+                  TRIVY_PASSWORD: ${{ secrets.REGISTRY_PASSWORD }}
+
+            - name: Upload Trivy Report
+              if: always() # Matches GitLab's "when: always"
+              uses: actions/upload-artifact@v4
+              with:
+                  name: trivy-report
+                  path: trivy-results/trivy-report.html
+
+    deploy:
+        needs: trivy-check
+        runs-on: arc-runner-set
+        permissions:
+            contents: read
+        steps:
+            - uses: actions/checkout@v4
+
+            # No need to "use-context" if ARC is in the same cluster!
+            # The runner automatically uses its own Service Account.
+
+            - name: Setup Helm
+              uses: azure/setup-helm@v3
+              with:
+                  version: "latest"
+
+            - name: Deploy with Helm
+              run: |
+                  helm upgrade --install \
+                  bookinfo-productpage-${{ env.ENV_NAME }} \
+                  ./src/productpage/helm \
+                  -f ./src/productpage/helm_values/values-bookinfo-${{ env.ENV_NAME }}-productpage.yaml \
+                  --set extraEnv.COMMIT_ID=${{ github.sha }} \
+                  --wait \
+                  --namespace bookinfo-${{ env.ENV_NAME }} \
+                  --create-namespace
+
+    dast-zap-baseline:
+        needs: deploy
+        runs-on: ubuntu-latest
+        permissions:
+            contents: read
+            issues: write
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: ZAP Scan
+              uses: zaproxy/action-baseline@v0.15.0
+              with:
+                  target: "https://bookinfo-gital-${{ env.ENV_NAME }}.opsta.in.th/"
+                  artifact_name: "zap-report"
+                  fail_action: false

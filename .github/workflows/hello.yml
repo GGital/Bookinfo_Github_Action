@@ -1,0 +1,8 @@
+name: Welcome
+on: [push]
+jobs:
+    welcome:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Say Hello
+              run: echo "Hello, World!"
