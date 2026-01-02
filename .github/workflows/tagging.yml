@@ -19,8 +19,8 @@ jobs:
                   SERVICES=("productpage" "details" "reviews" "ratings")
                   for SERVICE in "${SERVICES[@]}"; do
                       docker pull registry-gital.opsta.in.th/bookinfo/$SERVICE:uat
-                      docker tag registry-gital.opsta.in.th/bookinfo/$SERVICE:uat registry-gital.opsta.in.th/bookinfo/$SERVICE:${env.Tag}
-                      docker push registry-gital.opsta.in.th/bookinfo/$SERVICE:${env.Tag}
+                      docker tag registry-gital.opsta.in.th/bookinfo/$SERVICE:uat registry-gital.opsta.in.th/bookinfo/$SERVICE:${{ env.Tag }}
+                      docker push registry-gital.opsta.in.th/bookinfo/$SERVICE:${{ env.Tag }}
                   done
     tagging-git:
         runs-on: ubuntu-latest
@@ -31,7 +31,7 @@ jobs:
               run: |
                   git config user.email "sakukiheng@gmail.com"
                   git config user.name "GGital"
-                  TAG_NAME="build-${env.Tag}"
+                  TAG_NAME="build-${{ env.Tag }}"
                   echo "Creating tag $TAG_NAME"
                   git tag -f $TAG_NAME
                   git push origin $TAG_NAME -o ci.skip
