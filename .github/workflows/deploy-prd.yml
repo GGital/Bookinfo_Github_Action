@@ -47,6 +47,7 @@ jobs:
                         ./src/reviews/helm \
                         -f ./src/reviews/helm_values/values-bookinfo-prd-reviews.yaml \
                         --set extraEnv.COMMIT_ID=${{ github.sha }} \
+                        --set $APP.tag=$TAG \
                         --wait \
                         --namespace bookinfo-prd \
                         --create-namespace
