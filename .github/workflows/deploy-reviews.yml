@@ -1,5 +1,8 @@
 name: Deploy Reviews Service
-on: [push]
+on:
+    push:
+        paths:
+            - "src/ratings/**"
 env:
     PROJECT_KEY: "bookinfo:reviews"
     PROJECT_NAME: "bookinfo:reviews"

@@ -1,5 +1,8 @@
 name: Deploy Details Service
-on: [push]
+on:
+    push:
+        paths:
+            - "src/details/**"
 env:
     PROJECT_KEY: "bookinfo:details"
     PROJECT_NAME: "bookinfo:details"

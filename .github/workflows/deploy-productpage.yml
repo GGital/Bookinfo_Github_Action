@@ -1,5 +1,8 @@
 name: Deploy Productpage Service
-on: [push]
+on:
+    push:
+        paths:
+            - "src/productpage/**"
 env:
     PROJECT_KEY: "bookinfo:productpage"
     PROJECT_NAME: "bookinfo:productpage"

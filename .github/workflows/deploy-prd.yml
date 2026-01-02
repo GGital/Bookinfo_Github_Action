@@ -1,0 +1,48 @@
+name: Deploying Bookinfo on Production
+on:
+    workflow_dispatch:
+        inputs:
+            environment:
+                description: "Build Tag"
+                required: true
+                type: string
+
+jobs:
+    validate-tag:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Validate Tag Input
+              id: validate_tag
+              run: |
+                  if [[ -z "${{ github.event.inputs.environment }}" ]]; then
+                      echo "Error: Tag input is required."
+                      exit 1
+                  fi
+                  echo "Tag input is valid."
+    deploy-production:
+        needs: validate-tag
+        runs-on: arc-runner-set
+        permissions:
+            contents: read
+        steps:
+            - name: Checkout Repository
+              uses: actions/checkout@v4
+
+            - name: Setup Helm
+              uses: azure/setup-helm@v3
+              with:
+                  version: "latest"
+
+            - name: Deploy to Production Environment
+              run: |
+                  SERVICE=("productpage" "details" "reviews" "ratings")
+                    TAG="${{ github.event.inputs.environment }}"
+                    for APP in "${SERVICE[@]}"; do
+                        helm upgrade --install \
+                        bookinfo-$APP-$TAG \
+                        ./src/reviews/helm \
+                        -f ./src/reviews/helm_values/values-bookinfo-prd-reviews.yaml \
+                        --set extraEnv.COMMIT_ID=${{ github.sha }} \
+                        --wait \
+                        --namespace bookinfo-prd \
+                        --create-namespace
