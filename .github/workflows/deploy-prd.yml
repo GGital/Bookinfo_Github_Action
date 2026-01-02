@@ -43,7 +43,7 @@ jobs:
                     TAG="${INPUT_STRING: -7}"
                     for APP in "${SERVICE[@]}"; do
                         helm upgrade --install \
-                        bookinfo-$APP-$TAG \
+                        bookinfo-$APP-prd \
                         ./src/reviews/helm \
                         -f ./src/reviews/helm_values/values-bookinfo-prd-reviews.yaml \
                         --set extraEnv.COMMIT_ID=${{ github.sha }} \
