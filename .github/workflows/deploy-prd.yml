@@ -44,8 +44,8 @@ jobs:
                     for APP in "${SERVICE[@]}"; do
                         helm upgrade --install \
                         bookinfo-$APP-prd \
-                        ./src/reviews/helm \
-                        -f ./src/reviews/helm_values/values-bookinfo-prd-reviews.yaml \
+                        ./src/$APP/helm \
+                        -f ./src/$APP/helm_values/values-bookinfo-prd-$APP.yaml \
                         --set extraEnv.COMMIT_ID=${{ github.sha }} \
                         --set $APP.tag=$TAG \
                         --wait \
