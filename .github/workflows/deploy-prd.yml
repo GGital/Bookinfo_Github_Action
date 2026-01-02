@@ -39,7 +39,8 @@ jobs:
             - name: Deploy to Production Environment
               run: |
                   SERVICE=("productpage" "details" "reviews" "ratings")
-                    TAG="${env.INPUT: -7}"
+                    INPUT_STRING="${{ github.event.inputs.environment }}"
+                    TAG="${INPUT_STRING: -7}"
                     for APP in "${SERVICE[@]}"; do
                         helm upgrade --install \
                         bookinfo-$APP-$TAG \
